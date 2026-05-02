@@ -6,7 +6,9 @@
       "Bash(netstat -ano)",
       "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue | Stop-Process -Force\")",
       "Bash(powershell -Command \"Stop-Process -Id 15108 -Force -ErrorAction SilentlyContinue; Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue\")",
-      "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Format-List Id, ProcessName\")"
+      "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Format-List Id, ProcessName\")",
+      "Bash(pnpm add *)",
+      "Bash(npx prisma *)"
     ]
   }
 }
