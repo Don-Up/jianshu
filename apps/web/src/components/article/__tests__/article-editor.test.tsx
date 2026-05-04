@@ -216,7 +216,7 @@ describe('ArticleEditor', () => {
     it('should disable buttons while submitting', async () => {
       const { articleApi } = await import('@/lib/api');
       // Make the API call hang
-      articleApi.create.mockImplementationOnce(() => new Promise(() => {}));
+      (articleApi.create as any).mockImplementationOnce(() => new Promise(() => {}));
 
       render(<ArticleEditor />);
 

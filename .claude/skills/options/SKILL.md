@@ -5,42 +5,6 @@ description: This skill generates interactive multiple-choice questions (3-optio
 
 # Claude Code Skill: Interactive Choice Generator for Code Learning
 
-## Where to place this multi-choice questions
-/docs/multi-chocies/{TaskName}.html
-
-## When to Use This Skill
-
-Use this skill when:
-- Teaching a new codebase architecture to team members
-- Documenting technical decisions with interactive quizzes
-- Creating learning materials from existing code reviews or technical dialogues
-- Helping developers understand complex React/NestJS patterns
-- Generating self-assessment questions after code walkthroughs
-
-## Key Principles for Mental Model Building
-
-### 1. **Question Focus Areas**
-- **Why** decisions were made (not just what)
-- **Trade-offs** between approaches
-- **Edge cases** and error handling
-- **Data flow** through the system
-- **Component boundaries** and responsibilities
-
-### 2. **Distractor Design Rules**
-- Distractors should be **plausible but wrong** (not obviously silly)
-- Each distractor should represent a **common misconception**
-- Avoid making correct answer consistently longer/shorter
-- Distractors should teach something (even wrong answers have learning value)
-
-### 3. **Code Snippet Strategy**
-- Include **both correct and incorrect patterns** side-by-side
-- Highlight the **minimal difference** between working and broken code
-- Show **real usage examples** from actual codebase
-- Annotate key lines with comments
-
-## Skill Template Structure
-
-```markdown
 You are generating interactive multiple-choice questions for developers learning a new codebase.
 
 **Context:** [Brief description of what the developer is learning]
@@ -65,7 +29,30 @@ For each question:
 - Distractors must be realistic (things developers actually get wrong)
 - Code snippets must be self-contained and runnable in context
 - Avoid trick questions; focus on genuine understanding
-```
+
+## Where to place this multi-choice questions
+/docs/multi-chocies/{TaskName}.html
+
+## Key Principles for Mental Model Building
+
+### 1. **Question Focus Areas**
+- **Why** decisions were made (not just what)
+- **Trade-offs** between approaches
+- **Edge cases** and error handling
+- **Data flow** through the system
+- **Component boundaries** and responsibilities
+
+### 2. **Distractor Design Rules**
+- Distractors should be **plausible but wrong** (not obviously silly)
+- Each distractor should represent a **common misconception**
+- Avoid making correct answer consistently longer/shorter
+- Distractors should teach something (even wrong answers have learning value)
+
+### 3. **Code Snippet Strategy**
+- Include **both correct and incorrect patterns** side-by-side
+- Highlight the **minimal difference** between working and broken code
+- Show **real usage examples** from actual codebase
+- Annotate key lines with comments
 
 ## Example Question Generation Process
 
@@ -89,40 +76,6 @@ Explain the **conversion funnel** concept and why login pages omit footer links 
 ### Step 6: Create Code Snippet
 Show both usage patterns (with/without footer) in real context.
 
-## Mental Model Categories by Technical Area
-
-### React/Next.js Patterns
-- **Client vs Server Components** → When to use `'use client'`
-- **State Management** → Local state vs Context vs External stores
-- **Data Fetching** → Custom hooks vs inline fetching
-- **Optimistic Updates** → Immediate UI feedback patterns
-- **Component Composition** → Props vs children vs slot patterns
-
-### NestJS Backend
-- **Exception Filters** → Global error handling strategy
-- **Interceptors** → Response transformation
-- **Guards** → Authentication/authorization boundaries
-- **DTOs & Validation** → Data integrity patterns
-- **Prisma Relations** → Eager loading vs lazy loading
-
-### Database (Prisma)
-- **Unique constraints** → Preventing duplicates
-- **Relation queries** → Include vs select patterns
-- **Transactions** → When to use Promise.all vs $transaction
-- **Index design** → Query performance mental model
-
-### Authentication
-- **JWT statelessness** → No server session tracking
-- **Token storage** → Memory vs localStorage vs cookies
-- **Auth context** → Provider placement and initialization
-- **Protected routes** → Guard vs client-side checks
-
-### UI/UX Patterns
-- **Loading states** → Skeletons vs spinners
-- **Error boundaries** → Graceful degradation
-- **Form validation** → Client-side vs server-side
-- **Responsive design** → Mobile-first breakpoints
-
 ## Quality Checklist
 
 Before outputting questions, verify:
@@ -138,6 +91,8 @@ Before outputting questions, verify:
 ## Example Output: Auth Context Questions
 
 Here's a sample question generated using this skill from the earlier Auth Hook dialogue:
+
+data-answer="1" means the first option is correct, 2 means the second option is correct, 3 means the third option is correct.
 
 ```html
 <div class="options" data-answer="1">

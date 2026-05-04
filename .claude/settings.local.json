@@ -20,7 +20,11 @@
       "Bash(pnpm remove *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(pnpm --filter web typecheck)"
+      "Bash(pnpm --filter web typecheck)",
+      "Bash(pnpm --filter @jianshu/web typecheck)",
+      "Bash(pnpm --filter @jianshu/web test)",
+      "Bash(pnpm --filter @jianshu/web build)",
+      "Bash(pnpm --filter @jianshu/web test -- --run)"
     ]
   }
 }
