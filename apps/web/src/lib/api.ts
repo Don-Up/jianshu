@@ -78,7 +78,7 @@ export const articleApi = {
       body: JSON.stringify(data),
     }),
 
-  update: (slug: string, data: UpdateArticleRequest) =>
+  update: (slug: string, data: Partial<CreateArticleRequest>) =>
     fetchApi<ArticleResponse>(`/api/articles/${slug}`, {
       method: 'PUT',
       body: JSON.stringify(data),
