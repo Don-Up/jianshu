@@ -8,6 +8,8 @@
 
 **Tech Stack:** Next.js 14, React 18, TypeScript, TailwindCSS, React Hook Form, Zod (validation), @tanstack/react-query (future API state management)
 
+notice: Don't continue executing the next task in the plan when the current task is completed, I need to learn code changes from the current task.
+
 ---
 
 ## File Structure

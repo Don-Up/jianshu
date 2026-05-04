@@ -5,6 +5,7 @@ export default function Home() {
     id: '1',
     email: 'user@example.com',
     name: 'Demo User',
+    username: 'demo_user',
     createdAt: new Date(),
   };
 

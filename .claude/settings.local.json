@@ -12,7 +12,11 @@
       "Bash(pnpm build *)",
       "Bash(pnpm test *)",
       "Bash(gh pr *)",
-      "Bash(pnpm --filter @jianshu/api build)"
+      "Bash(pnpm --filter @jianshu/api build)",
+      "Bash(npx shadcn@latest init -y)",
+      "Bash(npx shadcn@latest add button input textarea card avatar label -y -o)",
+      "Bash(git add *)",
+      "Bash(pnpm --filter web typecheck)"
     ]
   }
 }
