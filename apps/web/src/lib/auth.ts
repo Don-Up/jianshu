@@ -40,8 +40,4 @@ export function clearAuth(): void {
 
 export function isAuthenticated(): boolean {
   return !!getToken();
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858

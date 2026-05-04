@@ -3,8 +3,6 @@ import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-<<<<<<< HEAD
-=======
 }
 
 export function formatDate(date: Date | string): string {
@@ -20,5 +18,4 @@ export function generateSlug(title: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9一-龥]+/g, '-')
     .replace(/^-|-$/g, '');
->>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
 }
