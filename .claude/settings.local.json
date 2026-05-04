@@ -11,7 +11,8 @@
       "Bash(npx prisma *)",
       "Bash(pnpm build *)",
       "Bash(pnpm test *)",
-      "Bash(gh pr *)"
+      "Bash(gh pr *)",
+      "Bash(pnpm --filter @jianshu/api build)"
     ]
   }
 }
