@@ -5,11 +5,14 @@ export interface User {
   email: string;
   name: string;
   username: string;
+<<<<<<< HEAD
   avatar?: string | null;
   bio?: string | null;
   followerCount?: number;
   followingCount?: number;
   articleCount?: number;
+=======
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
   createdAt: Date;
 }
 

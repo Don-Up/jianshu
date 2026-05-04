@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import type {
   ApiResponse,
   Article,
@@ -8,12 +9,19 @@ import type {
   UpdateArticleRequest,
   ArticleListParams,
 } from '@jianshu/shared';
+=======
+import type { ApiResponse, Article, User, LoginRequest, RegisterRequest, CreateArticleRequest, UpdateArticleRequest, ArticleListParams } from '@jianshu/shared';
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
 import type { ArticleListResponse, ArticleResponse } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+<<<<<<< HEAD
   const token = typeof window !== 'undefined' ? localStorage.getItem('jianshu_token') : null;
+=======
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -37,6 +45,10 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
   return res.json();
 }
 
+<<<<<<< HEAD
+=======
+// Auth API
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
 export const authApi = {
   login: (data: LoginRequest) =>
     fetchApi<ApiResponse<{ token: string; user: User }>>('/api/auth/login', {
@@ -55,6 +67,7 @@ export const authApi = {
   logout: () => Promise.resolve(),
 };
 
+<<<<<<< HEAD
 export const articleApi = {
   list: (params?: ArticleListParams) => {
     const searchParams = params
@@ -67,6 +80,15 @@ export const articleApi = {
     return fetchApi<ArticleListResponse>(
       `/api/articles${searchParams ? `?${searchParams}` : ''}`
     ) as Promise<ArticleListResponse>;
+=======
+// Article API
+export const articleApi = {
+  list: (params?: ArticleListParams) => {
+    const searchParams = params ? new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])
+    ).toString() : '';
+    return fetchApi<ArticleListResponse>(`/api/articles${searchParams ? `?${searchParams}` : ''}`) as Promise<ArticleListResponse>;
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
   },
 
   getBySlug: (slug: string) =>
@@ -100,6 +122,10 @@ export const articleApi = {
     }),
 };
 
+<<<<<<< HEAD
+=======
+// User API
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
 export const userApi = {
   getByUsername: (username: string) =>
     fetchApi<ApiResponse<User>>(`/api/users/${username}`),
@@ -110,6 +136,7 @@ export const userApi = {
     }),
 
   getArticles: (username: string, params?: ArticleListParams) => {
+<<<<<<< HEAD
     const searchParams = params
       ? new URLSearchParams(
           Object.entries(params)
@@ -122,3 +149,11 @@ export const userApi = {
     ) as Promise<ArticleListResponse>;
   },
 };
+=======
+    const searchParams = params ? new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])
+    ).toString() : '';
+    return fetchApi<ArticleListResponse>(`/api/users/${username}/articles${searchParams ? `?${searchParams}` : ''}`) as Promise<ArticleListResponse>;
+  },
+};
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858

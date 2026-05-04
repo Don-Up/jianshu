@@ -1,7 +1,10 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+<<<<<<< HEAD
   darkMode: ['class'],
+=======
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,6 +12,7 @@ const config: Config = {
   ],
   theme: {
     extend: {
+<<<<<<< HEAD
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
@@ -47,6 +51,22 @@ const config: Config = {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+=======
+      colors: {
+        primary: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+        },
+        gray: {
+          50: '#f9fafb',
+          100: '#f3f4f6',
+          500: '#6b7280',
+          700: '#374151',
+          900: '#111827',
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
         },
       },
       fontFamily: {

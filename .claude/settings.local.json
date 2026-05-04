@@ -13,9 +13,16 @@
       "Bash(pnpm test *)",
       "Bash(gh pr *)",
       "Bash(pnpm --filter @jianshu/api build)",
+<<<<<<< HEAD
       "Bash(npx shadcn@latest init -y)",
       "Bash(npx shadcn@latest add button input textarea card avatar label -y -o)",
       "Bash(git add *)",
+=======
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm remove *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+>>>>>>> c1b9c24836a4365a9449ce73fcf701f2d25b5858
       "Bash(pnpm --filter web typecheck)"
     ]
   }
