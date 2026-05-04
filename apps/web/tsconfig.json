@@ -22,7 +22,7 @@
       "@/*": ["./src/*"],
       "@jianshu/shared": ["../../packages/shared/src/index.ts"]
     },
-    "composite": true
+    "composite": false
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

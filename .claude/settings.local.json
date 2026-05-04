@@ -12,7 +12,12 @@
       "Bash(pnpm build *)",
       "Bash(pnpm test *)",
       "Bash(gh pr *)",
-      "Bash(pnpm --filter @jianshu/api build)"
+      "Bash(pnpm --filter @jianshu/api build)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm remove *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(pnpm --filter web typecheck)"
     ]
   }
 }
