@@ -1,0 +1,88 @@
+'use client';
+
+import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+export function Header() {
+  const { user, isAuthenticated, logout } = useAuth();
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+        <div className="flex items-center gap-8">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="text-xl font-bold text-primary">简书</span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+              发现
+            </Link>
+            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+              关注
+            </Link>
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {isAuthenticated ? (
+            <>
+              <Link href="/write">
+                <Button variant="default" size="sm">
+                  写文章
+                </Button>
+              </Link>
+              <div className="relative group">
+                <button className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.avatar || undefined} />
+                    <AvatarFallback>
+                      {user?.name?.slice(0, 2).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+                <div className="absolute right-0 top-full mt-1 w-48 rounded-md border border-border bg-background shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  <div className="py-1">
+                    <Link
+                      href={`/user/${user?.username}`}
+                      className="block px-4 py-2 text-sm text-foreground hover:bg-muted"
+                    >
+                      我的主页
+                    </Link>
+                    <Link
+                      href="/settings"
+                      className="block px-4 py-2 text-sm text-foreground hover:bg-muted"
+                    >
+                      设置
+                    </Link>
+                    <hr className="my-1 border-border" />
+                    <button
+                      onClick={logout}
+                      className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted"
+                    >
+                      退出
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button variant="ghost" size="sm">
+                  登录
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button variant="default" size="sm">
+                  注册
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}

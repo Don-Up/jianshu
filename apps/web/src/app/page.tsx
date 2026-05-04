@@ -1,24 +1,15 @@
-import { User } from '@jianshu/shared';
+import { PageLayout } from '@/components/layout/page-layout';
 
 export default function Home() {
-  const user: User = {
-    id: '1',
-    email: 'user@example.com',
-    name: 'Demo User',
-    username: 'demo_user',
-    createdAt: new Date(),
-  };
-
   return (
-    <main style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-      <h1>Welcome to Jianshu</h1>
-      <p>This is a pnpm monorepo with Next.js and Nest.js</p>
-
-      <div style={{ marginTop: '2rem', padding: '1rem', background: '#f5f5f5', borderRadius: '8px' }}>
-        <h2>Shared Types Demo</h2>
-        <p><strong>User:</strong> {user.name}</p>
-        <p><strong>Email:</strong> {user.email}</p>
+    <PageLayout>
+      <div className="container mx-auto max-w-5xl px-4 py-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">发现</h1>
+        <p className="text-muted-foreground mb-8">在这里发现有趣的内容</p>
+        <div className="text-muted-foreground text-center py-12">
+          文章列表将在后续步骤中添加
+        </div>
       </div>
-    </main>
+    </PageLayout>
   );
 }
