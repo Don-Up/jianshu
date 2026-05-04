@@ -14,7 +14,7 @@ export default function Home() {
     const fetchArticles = async () => {
       try {
         const res = await articleApi.list({ page: 1, limit: 20 });
-        setArticles(res.items);
+        setArticles(res.data?.items || []);
       } catch (error) {
         console.error('Failed to fetch articles:', error);
       } finally {

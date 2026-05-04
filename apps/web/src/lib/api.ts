@@ -5,14 +5,13 @@ import type {
   LoginRequest,
   RegisterRequest,
   CreateArticleRequest,
-  UpdateArticleRequest,
   ArticleListParams,
 } from '@jianshu/shared';
-import type { ArticleListResponse, ArticleResponse } from '@/types';
+import type { ArticleListResponse, ArticleWithAuthor } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('jianshu_token') : null;
 
   const headers: HeadersInit = {
@@ -39,18 +38,18 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 
 export const authApi = {
   login: (data: LoginRequest) =>
-    fetchApi<ApiResponse<{ token: string; user: User }>>('/api/auth/login', {
+    fetchApi<{ token: string; user: User }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   register: (data: RegisterRequest) =>
-    fetchApi<ApiResponse<{ token: string; user: User }>>('/api/auth/register', {
+    fetchApi<{ token: string; user: User }>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  me: () => fetchApi<ApiResponse<User>>('/api/auth/me'),
+  me: () => fetchApi<User>('/api/auth/me'),
 
   logout: () => Promise.resolve(),
 };
@@ -66,46 +65,46 @@ export const articleApi = {
       : '';
     return fetchApi<ArticleListResponse>(
       `/api/articles${searchParams ? `?${searchParams}` : ''}`
-    ) as Promise<ArticleListResponse>;
+    );
   },
 
   getBySlug: (slug: string) =>
-    fetchApi<ArticleResponse>(`/api/articles/${slug}`) as Promise<ArticleResponse>,
+    fetchApi<ArticleWithAuthor>(`/api/articles/${slug}`),
 
   create: (data: CreateArticleRequest) =>
-    fetchApi<ArticleResponse>('/api/articles', {
+    fetchApi<ArticleWithAuthor>('/api/articles', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   update: (slug: string, data: Partial<CreateArticleRequest>) =>
-    fetchApi<ArticleResponse>(`/api/articles/${slug}`, {
+    fetchApi<ArticleWithAuthor>(`/api/articles/${slug}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 
   delete: (slug: string) =>
-    fetchApi<ApiResponse>(`/api/articles/${slug}`, {
+    fetchApi<void>(`/api/articles/${slug}`, {
       method: 'DELETE',
     }),
 
   like: (slug: string) =>
-    fetchApi<ApiResponse<{ likeCount: number }>>(`/api/articles/${slug}/like`, {
+    fetchApi<{ likeCount: number }>(`/api/articles/${slug}/like`, {
       method: 'POST',
     }),
 
   bookmark: (slug: string) =>
-    fetchApi<ApiResponse<{ isBookmarked: boolean }>>(`/api/articles/${slug}/bookmark`, {
+    fetchApi<{ isBookmarked: boolean }>(`/api/articles/${slug}/bookmark`, {
       method: 'POST',
     }),
 };
 
 export const userApi = {
   getByUsername: (username: string) =>
-    fetchApi<ApiResponse<User>>(`/api/users/${username}`),
+    fetchApi<User>(`/api/users/${username}`),
 
   follow: (userId: string) =>
-    fetchApi<ApiResponse<{ isFollowing: boolean }>>(`/api/users/${userId}/follow`, {
+    fetchApi<{ isFollowing: boolean }>(`/api/users/${userId}/follow`, {
       method: 'POST',
     }),
 
@@ -119,6 +118,6 @@ export const userApi = {
       : '';
     return fetchApi<ArticleListResponse>(
       `/api/users/${username}/articles${searchParams ? `?${searchParams}` : ''}`
-    ) as Promise<ArticleListResponse>;
+    );
   },
 };

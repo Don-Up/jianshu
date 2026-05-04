@@ -12,30 +12,36 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock articleApi
-vi.mock('@/lib/api', () => ({
-  articleApi: {
-    create: vi.fn().mockResolvedValue({
-      success: true,
-      data: {
-        id: '1',
-        title: 'Test Article',
-        slug: 'test-article',
-        content: '<p>Content</p>',
-        author: {},
-      },
-    }),
-    update: vi.fn().mockResolvedValue({
-      success: true,
-      data: {
-        id: '1',
-        title: 'Test Article',
-        slug: 'test-article',
-        content: '<p>Content</p>',
-        author: {},
-      },
-    }),
-  },
-}));
+vi.mock('@/lib/api', () => {
+  const mockCreate = vi.fn().mockResolvedValue({
+    success: true,
+    data: {
+      id: '1',
+      title: 'Test Article',
+      slug: 'test-article',
+      content: '<p>Content</p>',
+      author: {},
+    },
+  });
+
+  const mockUpdate = vi.fn().mockResolvedValue({
+    success: true,
+    data: {
+      id: '1',
+      title: 'Test Article',
+      slug: 'test-article',
+      content: '<p>Content</p>',
+      author: {},
+    },
+  });
+
+  return {
+    articleApi: {
+      create: mockCreate,
+      update: mockUpdate,
+    },
+  };
+});
 
 // Mock Button
 vi.mock('@/components/ui/button', () => ({
@@ -122,14 +128,14 @@ describe('ArticleEditor', () => {
   });
 
   describe('Create mode', () => {
-    it('should render empty form for new article', () => {
+    it('should Render empty form for new article', () => {
       render(<ArticleEditor />);
 
       const titleInput = screen.getByPlaceholderText('输入文章标题...') as HTMLInputElement;
       expect(titleInput.value).toBe('');
     });
 
-    it('should render all form fields', () => {
+    it('should Render all form fields', () => {
       render(<ArticleEditor />);
 
       expect(screen.getByPlaceholderText('输入文章标题...')).toBeInTheDocument();
@@ -210,7 +216,7 @@ describe('ArticleEditor', () => {
     it('should disable buttons while submitting', async () => {
       const { articleApi } = await import('@/lib/api');
       // Make the API call hang
-      articleApi.create.mockImplementation(() => new Promise(() => {}));
+      articleApi.create.mockImplementationOnce(() => new Promise(() => {}));
 
       render(<ArticleEditor />);
 
