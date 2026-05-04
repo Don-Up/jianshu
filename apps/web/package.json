@@ -10,15 +10,21 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@jianshu/shared": "workspace:*",
+    "clsx": "^2.1.1",
     "next": "14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "@jianshu/shared": "workspace:*"
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "~0.5.19",
     "@types/node": "^20.12.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.13",
+    "tailwindcss": "^3.4.19",
     "typescript": "^5.4.0"
   }
 }
