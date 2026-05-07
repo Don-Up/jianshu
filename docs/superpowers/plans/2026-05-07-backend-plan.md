@@ -64,16 +64,18 @@ apps/api/
 
 ---
 
-## Task 1: Comments Module
+## Task 1: Comments Module ✅ COMPLETE
 
-**Files:**
+**Files (completed):**
 - Modify: `apps/api/prisma/schema.prisma`
 - Create: `apps/api/src/comments/comments.module.ts`
 - Create: `apps/api/src/comments/comments.controller.ts`
 - Create: `apps/api/src/comments/comments.service.ts`
 - Create: `apps/api/src/comments/dto/create-comment.dto.ts`
-- Modify: `apps/api/src/articles/articles.controller.ts`
+- Create: `apps/api/src/comments/dto/query-comment.dto.ts`
+- Create: `apps/api/src/comments/__tests__/comments.service.spec.ts`
 - Modify: `apps/api/src/app.module.ts`
+- Create: `docs/mental-models/V2-BTask1.md`
 
 - [ ] **Step 1: Update Prisma schema**
 
