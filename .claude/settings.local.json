@@ -24,7 +24,8 @@
       "Bash(pnpm --filter @jianshu/web typecheck)",
       "Bash(pnpm --filter @jianshu/web test)",
       "Bash(pnpm --filter @jianshu/web build)",
-      "Bash(pnpm --filter @jianshu/web test -- --run)"
+      "Bash(pnpm --filter @jianshu/web test -- --run)",
+      "Bash(pnpm --filter @jianshu/api test)"
     ]
   }
 }
