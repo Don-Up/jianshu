@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -43,11 +44,13 @@ export class AuthService {
     });
 
     const token = this.generateToken(user);
+    const refreshToken = await this.createRefreshToken(user.id);
 
     return {
       success: true,
       data: {
         token,
+        refreshToken,
         user: this.sanitizeUser(user),
       },
     };
@@ -69,11 +72,13 @@ export class AuthService {
     }
 
     const token = this.generateToken(user);
+    const refreshToken = await this.createRefreshToken(user.id);
 
     return {
       success: true,
       data: {
         token,
+        refreshToken,
         user: this.sanitizeUser(user),
       },
     };
@@ -109,5 +114,63 @@ export class AuthService {
   private sanitizeUser(user: any) {
     const { password, ...result } = user;
     return result;
+  }
+
+  private generateRefreshToken(): string {
+    return crypto.randomBytes(40).toString('hex');
+  }
+
+  private async createRefreshToken(userId: string) {
+    const token = this.generateRefreshToken();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
+
+    await this.prisma.refreshToken.create({
+      data: {
+        token,
+        expiresAt,
+        userId,
+      },
+    });
+
+    return token;
+  }
+
+  async refreshTokens(refreshToken: string) {
+    const tokenRecord = await this.prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: { user: true },
+    });
+
+    if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
+      throw new UnauthorizedException('Refresh token 无效或已过期');
+    }
+
+    // Delete old refresh token
+    await this.prisma.refreshToken.delete({
+      where: { id: tokenRecord.id },
+    });
+
+    // Generate new tokens
+    const newAccessToken = this.generateToken(tokenRecord.user);
+    const newRefreshToken = await this.createRefreshToken(tokenRecord.userId);
+
+    return {
+      success: true,
+      data: {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        user: this.sanitizeUser(tokenRecord.user),
+      },
+    };
+  }
+
+  async logout(userId: string) {
+    // Delete all refresh tokens for user
+    await this.prisma.refreshToken.deleteMany({
+      where: { userId },
+    });
+
+    return { success: true };
   }
 }

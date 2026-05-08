@@ -34,6 +34,12 @@ describe('AuthService', () => {
               findFirst: jest.fn(),
               create: jest.fn(),
             },
+            refreshToken: {
+              findUnique: jest.fn(),
+              create: jest.fn(),
+              delete: jest.fn(),
+              deleteMany: jest.fn(),
+            },
           },
         },
         {
@@ -58,6 +64,10 @@ describe('AuthService', () => {
     it('should register a new user successfully', async () => {
       prismaService.user.findUnique = jest.fn().mockResolvedValue(null);
       prismaService.user.create = jest.fn().mockResolvedValue(mockUser);
+      prismaService.refreshToken.create = jest.fn().mockResolvedValue({
+        token: 'refresh-token',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
 
       const result = await authService.register({
         email: 'test@example.com',
@@ -68,6 +78,9 @@ describe('AuthService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.token).toBe('jwt-token');
+      expect(result.data.refreshToken).toBeDefined();
+      expect(typeof result.data.refreshToken).toBe('string');
+      expect(result.data.refreshToken.length).toBeGreaterThan(0);
       expect(result.data.user.email).toBe('test@example.com');
       expect(result.data.user.password).toBeUndefined();
     });
@@ -109,6 +122,10 @@ describe('AuthService', () => {
         ...mockUser,
         password: hashedPassword,
       });
+      prismaService.refreshToken.create = jest.fn().mockResolvedValue({
+        token: 'refresh-token',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
 
       const result = await authService.login({
         email: 'test@example.com',
@@ -117,6 +134,9 @@ describe('AuthService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.token).toBe('jwt-token');
+      expect(result.data.refreshToken).toBeDefined();
+      expect(typeof result.data.refreshToken).toBe('string');
+      expect(result.data.refreshToken.length).toBeGreaterThan(0);
       expect(result.data.user.password).toBeUndefined();
     });
 
@@ -164,6 +184,72 @@ describe('AuthService', () => {
       await expect(authService.me('nonexistent-id')).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('refreshTokens', () => {
+    it('should refresh tokens successfully', async () => {
+      const mockRefreshToken = {
+        id: 'token-id',
+        token: 'valid-refresh-token',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        userId: 'user-123',
+        user: mockUser,
+      };
+      prismaService.refreshToken.findUnique = jest.fn().mockResolvedValue(mockRefreshToken);
+      prismaService.refreshToken.delete = jest.fn().mockResolvedValue(mockRefreshToken);
+      prismaService.refreshToken.create = jest.fn().mockResolvedValue({
+        token: 'new-refresh-token',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
+
+      const result = await authService.refreshTokens('valid-refresh-token');
+
+      expect(result.success).toBe(true);
+      expect(result.data.accessToken).toBe('jwt-token');
+      expect(result.data.refreshToken).toBeDefined();
+      expect(typeof result.data.refreshToken).toBe('string');
+      expect(result.data.refreshToken.length).toBeGreaterThan(0);
+      expect(result.data.user.email).toBe('test@example.com');
+      expect(prismaService.refreshToken.delete).toHaveBeenCalledWith({
+        where: { id: 'token-id' },
+      });
+    });
+
+    it('should throw UnauthorizedException for invalid token', async () => {
+      prismaService.refreshToken.findUnique = jest.fn().mockResolvedValue(null);
+
+      await expect(
+        authService.refreshTokens('invalid-token'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException for expired token', async () => {
+      const expiredToken = {
+        id: 'token-id',
+        token: 'expired-token',
+        expiresAt: new Date(Date.now() - 1000), // already expired
+        userId: 'user-123',
+        user: mockUser,
+      };
+      prismaService.refreshToken.findUnique = jest.fn().mockResolvedValue(expiredToken);
+
+      await expect(
+        authService.refreshTokens('expired-token'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('logout', () => {
+    it('should delete all refresh tokens for user', async () => {
+      prismaService.refreshToken.deleteMany = jest.fn().mockResolvedValue({ count: 3 });
+
+      const result = await authService.logout('user-123');
+
+      expect(result.success).toBe(true);
+      expect(prismaService.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'user-123' },
+      });
     });
   });
 });

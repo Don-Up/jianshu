@@ -28,6 +28,7 @@ model User {
 
   notifications Notification[] @relation("NotificationUser")
   actorNotifications Notification[] @relation("NotificationActor")
+  refreshTokens RefreshToken[]
 
   @@map("users")
 }
@@ -151,4 +152,17 @@ model Notification {
   @@index([userId, isRead])
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }
