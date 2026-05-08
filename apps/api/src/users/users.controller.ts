@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Param, Query, UseGuards, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -29,6 +30,14 @@ export class UsersController {
   @ApiOperation({ summary: 'Update current user profile' })
   async updateMe(@CurrentUser() user: JwtUser, @Body() dto: UpdateUserDto) {
     return this.usersService.update(user.id, dto);
+  }
+
+  @Post('me/change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change password' })
+  async changePassword(@CurrentUser() user: JwtUser, @Body() dto: ChangePasswordDto) {
+    return this.usersService.changePassword(user.id, dto.currentPassword, dto.newPassword);
   }
 
   @Post(':userId/follow')

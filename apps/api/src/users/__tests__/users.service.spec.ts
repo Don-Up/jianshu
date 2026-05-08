@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users.service';
 import { PrismaService } from '../../prisma.service';
+import * as bcrypt from 'bcrypt';
 
 describe('UsersService', () => {
   let usersService: UsersService;
@@ -224,6 +225,48 @@ describe('UsersService', () => {
       await expect(usersService.getUserArticles('nonexistent', 1, 20)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('changePassword', () => {
+    it('should change password successfully', async () => {
+      const hashedPassword = await bcrypt.hash('oldpassword', 10);
+      prismaService.user.findUnique = jest.fn().mockResolvedValue({
+        ...mockUser,
+        password: hashedPassword,
+      });
+      prismaService.user.update = jest.fn().mockResolvedValue({
+        ...mockUser,
+        password: hashedPassword,
+      });
+
+      const result = await usersService.changePassword('user-123', 'oldpassword', 'newpassword123');
+
+      expect(result.success).toBe(true);
+      expect(prismaService.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-123' },
+        data: { password: expect.any(String) },
+      });
+    });
+
+    it('should throw NotFoundException if user not found', async () => {
+      prismaService.user.findUnique = jest.fn().mockResolvedValue(null);
+
+      await expect(
+        usersService.changePassword('nonexistent', 'oldpassword', 'newpassword')
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw UnauthorizedException if current password is wrong', async () => {
+      const hashedPassword = await bcrypt.hash('correctpassword', 10);
+      prismaService.user.findUnique = jest.fn().mockResolvedValue({
+        ...mockUser,
+        password: hashedPassword,
+      });
+
+      await expect(
+        usersService.changePassword('user-123', 'wrongpassword', 'newpassword')
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 });
