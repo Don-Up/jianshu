@@ -1,20 +1,32 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { LoggingMiddleware } from './common/middleware/logging.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');
 
+  // Security headers
+  app.use(helmet());
+
+  // CORS
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
     credentials: true,
   });
 
+  // Request logging
+  app.use(LoggingMiddleware);
+
+  // Rate limiting (applied via APP_GUARD in app.module.ts)
+
+  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -31,8 +43,8 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Jianshu API')
-    .setDescription('Blog platform API')
-    .setVersion('1.0')
+    .setDescription('简书博客平台 API')
+    .setVersion('2.0')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
