@@ -5,7 +5,6 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { LoggingMiddleware } from './common/middleware/logging.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,8 +20,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Request logging
-  app.use(LoggingMiddleware);
+  // Request logging - temporarily disabled due to ESM/compat issue
+  // app.use(loggerMiddleware);
 
   // Rate limiting (applied via APP_GUARD in app.module.ts)
 

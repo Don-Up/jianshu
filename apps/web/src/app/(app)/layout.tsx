@@ -10,7 +10,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      const currentPath = window.location.pathname;
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -20,10 +21,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <p className="text-muted-foreground">加载中...</p>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return null;
   }
 
   return <>{children}</>;

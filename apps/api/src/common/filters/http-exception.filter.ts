@@ -16,6 +16,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = '服务器内部错误';
 
+    // Log the actual error for debugging
+    if (!(exception instanceof HttpException)) {
+      console.error('Non-HTTP Exception:', exception);
+    }
+
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();

@@ -3,8 +3,13 @@ import type { User } from '@jianshu/shared';
 const TOKEN_KEY = 'jianshu_token';
 const USER_KEY = 'jianshu_user';
 
+const ACCESS_TOKEN_COOKIE = 'jianshu_access_token';
+const REFRESH_TOKEN_COOKIE = 'jianshu_refresh_token';
+
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
+  const cookieToken = getCookie(ACCESS_TOKEN_COOKIE);
+  if (cookieToken) return cookieToken;
   return localStorage.getItem(TOKEN_KEY);
 }
 
@@ -40,4 +45,10 @@ export function clearAuth(): void {
 
 export function isAuthenticated(): boolean {
   return !!getToken();
+}
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
 }

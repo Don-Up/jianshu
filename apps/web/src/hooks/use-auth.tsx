@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import type { User } from '@jianshu/shared';
-import { authApi } from '@/lib/api';
-import { getUser, setUser as saveUser, setToken, clearAuth, isAuthenticated } from '@/lib/auth';
+import { getUser, setUser as saveUser, setToken, clearAuth, isAuthenticated, getToken } from '@/lib/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -11,7 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, username: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -28,13 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUserState(savedUser);
         }
         try {
-          const res = await authApi.me();
-          if (res.success && res.data) {
-            setUserState(res.data);
-            saveUser(res.data);
-          } else {
-            clearAuth();
-            setUserState(null);
+          const token = getToken();
+          if (token) {
+            const res = await fetch('/api/auth/me', {
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
+            const data = await res.json();
+            if (data.success && data.data) {
+              setUserState(data.data);
+              saveUser(data.data);
+            } else {
+              clearAuth();
+              setUserState(null);
+            }
           }
         } catch {
           clearAuth();
@@ -47,28 +52,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await authApi.login({ email, password });
-    if (res.success && res.data) {
-      setToken(res.data.token);
-      setUserState(res.data.user);
-      saveUser(res.data.user);
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+
+    if (data.success && data.data) {
+      setUserState(data.data.user);
+      saveUser(data.data.user);
+      if (data.data.token) {
+        setToken(data.data.token);
+      }
     } else {
-      throw new Error(res.error || 'Login failed');
+      throw new Error(data.error || 'Login failed');
     }
   }, []);
 
   const register = useCallback(async (email: string, password: string, name: string, username: string) => {
-    const res = await authApi.register({ email, password, name, username });
-    if (res.success && res.data) {
-      setToken(res.data.token);
-      setUserState(res.data.user);
-      saveUser(res.data.user);
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name, username }),
+    });
+    const data = await res.json();
+
+    if (data.success && data.data) {
+      setUserState(data.data.user);
+      saveUser(data.data.user);
+      if (data.data.token) {
+        setToken(data.data.token);
+      }
     } else {
-      throw new Error(res.error || 'Registration failed');
+      throw new Error(data.error || 'Registration failed');
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // Continue with local cleanup even if API fails
+    }
     clearAuth();
     setUserState(null);
   }, []);

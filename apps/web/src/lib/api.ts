@@ -8,25 +8,59 @@ import type {
   ArticleListParams,
 } from '@jianshu/shared';
 import type { ArticleListResponse, ArticleWithAuthor } from '@/types';
+import { getToken } from '@/lib/auth';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const REFRESH_TOKEN_COOKIE = 'jianshu_refresh_token';
+
+async function refreshTokens(): Promise<boolean> {
+  if (typeof document === 'undefined') return false;
+  const match = document.cookie.match(new RegExp('(^| )' + REFRESH_TOKEN_COOKIE + '=([^;]+)'));
+  const refreshToken = match ? decodeURIComponent(match[2]) : null;
+  if (!refreshToken) return false;
+
+  try {
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('jianshu_token') : null;
+  const token = getToken();
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options?.headers,
   };
 
-  if (token) {
-    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
-  }
-
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
+    credentials: 'include',
     headers,
   });
+
+  if (res.status === 401 && !(options?.headers as Record<string, string>)?.['x-retry']) {
+    const refreshed = await refreshTokens();
+    if (refreshed) {
+      (headers as Record<string, string>)['x-retry'] = 'true';
+      const retryRes = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        credentials: 'include',
+        headers,
+      });
+      if (retryRes.ok) {
+        return retryRes.json();
+      }
+    }
+    throw new Error('Unauthorized');
+  }
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ error: 'Request failed' }));
@@ -51,7 +85,7 @@ export const authApi = {
 
   me: () => fetchApi<User>('/api/auth/me'),
 
-  logout: () => Promise.resolve(),
+  logout: () => fetchApi<void>('/api/auth/logout', { method: 'POST' }),
 };
 
 export const articleApi = {

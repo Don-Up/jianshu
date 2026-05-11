@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { getToken, setToken, getUser, setUser, clearAuth, isAuthenticated } from '../auth';
 
 const TEST_TOKEN = 'test-token-123';
@@ -13,10 +13,12 @@ const TEST_USER = {
 describe('auth utilities', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   describe('getToken / setToken', () => {
@@ -26,6 +28,26 @@ describe('auth utilities', () => {
 
     it('should store and retrieve token', () => {
       setToken(TEST_TOKEN);
+      expect(getToken()).toBe(TEST_TOKEN);
+    });
+
+    it('should prioritize cookie over localStorage', () => {
+      localStorage.setItem('jianshu_token', 'localStorage-token');
+      Object.defineProperty(document, 'cookie', {
+        value: 'jianshu_access_token=cookie-token; path=/',
+        writable: true,
+        configurable: true,
+      });
+      expect(getToken()).toBe('cookie-token');
+    });
+
+    it('should fallback to localStorage when no cookie', () => {
+      localStorage.setItem('jianshu_token', TEST_TOKEN);
+      Object.defineProperty(document, 'cookie', {
+        value: '',
+        writable: true,
+        configurable: true,
+      });
       expect(getToken()).toBe(TEST_TOKEN);
     });
   });
@@ -67,6 +89,15 @@ describe('auth utilities', () => {
 
     it('should return true when token exists', () => {
       setToken(TEST_TOKEN);
+      expect(isAuthenticated()).toBe(true);
+    });
+
+    it('should return true when cookie token exists', () => {
+      Object.defineProperty(document, 'cookie', {
+        value: 'jianshu_access_token=cookie-token; path=/',
+        writable: true,
+        configurable: true,
+      });
       expect(isAuthenticated()).toBe(true);
     });
   });
