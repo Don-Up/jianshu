@@ -109,6 +109,28 @@ vi.mock('@/components/ui/textarea', () => ({
   ),
 }));
 
+// Mock TipTap components
+vi.mock('@/components/tiptap/tiptap-editor', () => ({
+  TiptapEditor: ({
+    content,
+    onChange,
+    placeholder,
+  }: {
+    content: string;
+    onChange: (content: string) => void;
+    placeholder?: string;
+  }) => (
+    <div data-testid="tiptap-editor">
+      <textarea
+        data-testid="tiptap-content"
+        value={content}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+    </div>
+  ),
+}));
+
 // Mock Card components
 vi.mock('@/components/ui/card', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
@@ -140,7 +162,7 @@ describe('ArticleEditor', () => {
 
       expect(screen.getByPlaceholderText('输入文章标题...')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('封面图片 URL（可选）')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('输入文章内容...（支持 Markdown）')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('输入文章内容...')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('文章摘要...')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('技术, 随笔, 读书...')).toBeInTheDocument();
     });
@@ -165,7 +187,7 @@ describe('ArticleEditor', () => {
     it('should update content on change', async () => {
       render(<ArticleEditor />);
 
-      const contentTextarea = screen.getByPlaceholderText('输入文章内容...（支持 Markdown）');
+      const contentTextarea = screen.getByPlaceholderText('输入文章内容...');
       await userEvent.type(contentTextarea, 'This is the article content');
 
       expect(contentTextarea).toHaveValue('This is the article content');
@@ -197,10 +219,10 @@ describe('ArticleEditor', () => {
       expect(titleInput.value).toBe('Existing Title');
     });
 
-    it('should display correct content in textarea', () => {
+    it('should display correct content in editor', () => {
       render(<ArticleEditor initialData={initialData} slug="existing-slug" isEditing={true} />);
 
-      const contentTextarea = screen.getByPlaceholderText('输入文章内容...（支持 Markdown）');
+      const contentTextarea = screen.getByPlaceholderText('输入文章内容...');
       expect(contentTextarea).toHaveValue('Existing content');
     });
 
@@ -223,7 +245,7 @@ describe('ArticleEditor', () => {
       const titleInput = screen.getByPlaceholderText('输入文章标题...');
       await userEvent.type(titleInput, 'My Article');
 
-      const contentTextarea = screen.getByPlaceholderText('输入文章内容...（支持 Markdown）');
+      const contentTextarea = screen.getByPlaceholderText('输入文章内容...');
       await userEvent.type(contentTextarea, 'Content');
 
       const submitButton = screen.getByText('发布');

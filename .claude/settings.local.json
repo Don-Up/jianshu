@@ -52,7 +52,8 @@
       "Bash(curl -v -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"test@test.com\",\"password\":\"test123\"}')",
       "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"test@test.com\",\"password\":\"test123\"}' -c /tmp/cookies.txt)",
       "Bash(curl -s http://localhost:4000/api/articles -b /tmp/cookies.txt)",
-      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"test@test.com\",\"password\":\"test123\"}' -c /tmp/cookies.txt -v)"
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"test@test.com\",\"password\":\"test123\"}' -c /tmp/cookies.txt -v)",
+      "Bash(pnpm --filter @jianshu/web add @tiptap/react @tiptap/starter-kit @tiptap/extension-image @tiptap/extension-link @tiptap/extension-placeholder @tiptap/extension-code-block-lowlight @tiptap/extension-horizontal-rule @tiptap/extension-underline lowlight)"
     ]
   }
 }

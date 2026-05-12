@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { TiptapEditor } from '@/components/tiptap/tiptap-editor';
 import { articleApi } from '@/lib/api';
 import type { CreateArticleRequest } from '@jianshu/shared';
 
@@ -88,12 +89,10 @@ export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorPro
             />
           </div>
 
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="输入文章内容...（支持 Markdown）"
-            className="min-h-[400px] font-serif text-lg leading-relaxed resize-y"
-            required
+          <TiptapEditor
+            content={content}
+            onChange={setContent}
+            placeholder="输入文章内容..."
           />
 
           <div>
