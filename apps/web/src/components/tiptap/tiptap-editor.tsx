@@ -1,6 +1,7 @@
 'use client';
 
 import { useEditor, EditorContent } from '@tiptap/react';
+import { useEffect } from 'react';
 import { extensions } from '@/lib/tiptap/extensions';
 import { TiptapToolbar } from './tiptap-toolbar';
 
@@ -16,7 +17,6 @@ export function TiptapEditor({ content, onChange, placeholder }: TiptapEditorPro
     content,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      console.log("Editor content updated:", editor.getHTML());
       onChange(editor.getHTML());
     },
     editorProps: {
@@ -25,6 +25,13 @@ export function TiptapEditor({ content, onChange, placeholder }: TiptapEditorPro
       },
     },
   });
+
+  // Update editor content when prop changes (after article loads)
+  useEffect(() => {
+    if (editor && content && editor.getHTML() !== content) {
+      editor.commands.setContent(content, { emitUpdate: false });
+    }
+  }, [content, editor]);
 
   return (
     <div className="border rounded-md overflow-hidden">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,17 @@ export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorPro
   const [coverImage, setCoverImage] = useState(initialData?.coverImage || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Sync with initialData when it changes (e.g., after article loads)
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.title !== undefined) setTitle(initialData.title);
+      if (initialData.content !== undefined) setContent(initialData.content);
+      if (initialData.excerpt !== undefined) setExcerpt(initialData.excerpt);
+      if (initialData.coverImage !== undefined) setCoverImage(initialData.coverImage);
+      if (initialData.tags !== undefined) setTags(initialData.tags.join(', '));
+    }
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent, publish: boolean = true) => {
     e.preventDefault();

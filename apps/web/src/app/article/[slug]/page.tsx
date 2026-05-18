@@ -1,18 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ArticleContent } from '@/components/article/article-content';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useArticle } from '@/hooks/use-article';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function ArticlePage() {
   const params = useParams();
+  const router = useRouter();
   const slug = params.slug as string;
-  const { article, isLoading, error, likeArticle } = useArticle(slug);
+  const { article, isLoading: isArticleLoading, error, likeArticle } = useArticle(slug);
   const [isLiking, setIsLiking] = useState(false);
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   const handleLike = async () => {
     setIsLiking(true);
@@ -23,7 +26,9 @@ export default function ArticlePage() {
     }
   };
 
-  if (isLoading) {
+  const isLoading = isArticleLoading || isAuthLoading;
+
+  if (isLoading && !article) {
     return (
       <PageLayout>
         <div className="max-w-3xl mx-auto px-4 py-8">
@@ -49,10 +54,18 @@ export default function ArticlePage() {
     );
   }
 
+  console.log('isLoading:', isLoading, 'article.author.id:', article?.author?.id, 'user?.id:', user?.id, 'user object:', user);
+
   return (
     <PageLayout>
       <div className="bg-secondary/30 py-8">
-        <ArticleContent article={article} onLike={handleLike} isLiking={isLiking} />
+        <ArticleContent
+          article={article}
+          onLike={handleLike}
+          isLiking={isLiking}
+          showEditButton={!isLoading && user !== null && article.author.id === user.id}
+          onEdit={() => router.push(`/write?slug=${slug}`)}
+        />
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-8">

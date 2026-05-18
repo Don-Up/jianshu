@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "pnpm --filter \"@jianshu/web\" dev",
     "dev:api": "pnpm --filter \"@jianshu/api\" start:dev",
+    "storybook": "pnpm --filter \"@jianshu/web\" storybook",
     "build": "pnpm -r build",
     "build:web": "pnpm --filter \"@jianshu/web\" build",
     "build:api": "pnpm --filter \"@jianshu/api\" build",

@@ -7,13 +7,22 @@ interface ArticleContentProps {
   article: ArticleWithAuthor;
   onLike?: () => void;
   isLiking?: boolean;
+  showEditButton?: boolean;
+  onEdit?: () => void;
 }
 
-export function ArticleContent({ article, onLike, isLiking }: ArticleContentProps) {
+export function ArticleContent({ article, onLike, isLiking, showEditButton, onEdit }: ArticleContentProps) {
   return (
     <article className="max-w-3xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{article.title}</h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{article.title}</h1>
+          {showEditButton && onEdit && (
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              编辑
+            </Button>
+          )}
+        </div>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

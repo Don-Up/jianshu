@@ -20,14 +20,17 @@ export async function GET() {
       },
     });
 
-    if (!res.ok) {
+    const data = await res.json();
+
+    if (!res.ok || data.success === false) {
       return NextResponse.json(
-        { success: false, error: 'Failed to get user' },
+        { success: false, error: data.error || 'Failed to get user' },
         { status: res.status }
       );
     }
 
-    const user = await res.json();
+    // Backend returns user directly or wrapped in data
+    const user = data.data || data;
     return NextResponse.json({ success: true, data: user });
   } catch (error) {
     return NextResponse.json(
