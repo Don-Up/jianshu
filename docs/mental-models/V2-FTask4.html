@@ -1,0 +1,126 @@
+<div class="options" data-answer="1">
+  <div>`useComments` 返回的 `comments` 状态初始化为空数组 `[]`，为什么 `CommentList` 仍要接收 `isLoading` prop 来区分「暂无评论」和「加载中」？</div>
+  <div>因为网络请求可能失败，`isLoading` 用于提示用户当前正在获取数据，而不是显示空状态</div>
+  <div>`isLoading` 是 React 的并发模式要求，没有它组件会崩溃</div>
+  <div>`comments` 是异步数据，空数组不代表没有评论，可能是还没返回</div>
+  <div class="explain">`comments` 初始化为 `[]` 时，在数据返回前 `CommentList` 会渲染空状态「暂无评论」。用户会困惑：是真的没有评论，还是正在加载？`isLoading` 标志解决了这个歧义——加载中显示加载动画，加载完显示真实数据或空状态。</div>
+</div>
+<pre><code class="language-typescript">// CommentList 中的判断逻辑
+export function CommentList({ comments, isLoading, ... }) {
+  if (comments.length === 0 && !isLoading) {
+    return &lt;p&gt;暂无评论，快来发表第一条评论吧&lt;/p&gt;;
+  }
+  // 有数据或正在加载，都走正常渲染
+}
+</code></pre>
+
+<div class="options" data-answer="1">
+  <div>`CommentForm` 内部检查 `isAuthenticated` 并渲染登录链接，而不是让父组件 `CommentsSection` 决定是否渲染 Form。为什么这样设计？</div>
+  <div>Form 是自我包含的 UI 单元，Auth 检查是 Form 的内部逻辑，父组件不需要知道</div>
+  <div>这样可以减少一次 prop 传递，提升渲染性能</div>
+  <div>Auth 检查必须放在子组件，否则会引起 React 生命周期错误</div>
+  <div class="explain">「Auth Gate」放在最小单元内部称为「自包含授权」。`CommentForm` 知道自己什么时候该显示登录框，什么时候该显示输入框。父组件 `CommentsSection` 只负责组合 Form 和 List，不关心 Form 的内部逻辑。这遵循了「单一职责」——每个组件只管自己的渲染逻辑。</div>
+</div>
+<pre><code class="language-typescript">// CommentForm 的 Auth Gate
+export function CommentForm({ onSubmit, isSubmitting }) {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      &lt;div&gt;
+        请&lt;a href="/login"&gt;登录&lt;/a&gt;后发表评论
+      &lt;/div&gt;
+    );
+  }
+  return &lt;form&gt;...&lt;/form&gt;;
+}
+</code></pre>
+
+<div class="options" data-answer="2">
+  <div>`useComments` 的 `loadComments(articleId, page)` 在 `page === 1` 时替换列表，在 `page > 1` 时追加。这样的设计是为了解决什么问题？</div>
+  <div>解决第一页加载后，第二页数据无法显示的问题</div>
+  <div>解决分页时「刷新丢失第一页数据」的问题——追加而不是覆盖</div>
+  <div>解决评论数据过大导致的内存溢出问题</div>
+  <div class="explain">分页加载常见错误是「第二页覆盖第一页」。如果每次 `loadComments(page)` 都直接 `setComments(newData)`，第二页加载后第一页就丢了。解决方案是判断 page：第 1 页替换（全新数据），第 2+ 页追加（`...prev, ...newItems`）。前端记住当前 page 和 totalPages，`loadMore` 直接调用 `loadComments(articleId, page + 1)`。</div>
+</div>
+<pre><code class="language-typescript">// useComments 中的分页逻辑
+if (pageNum === 1) {
+  setComments(res.data.items);  // 替换
+} else {
+  setComments((prev) => [...prev, ...res.data!.items]);  // 追加
+}
+</code></pre>
+
+<div class="options" data-answer="2">
+  <div>`deleteComment` 在 API 返回前就把评论从列表中移除了（`prev.filter`）。这叫什么模式，有什么风险？</div>
+  <div>叫「乐观更新」，风险是 API 失败时用户看到评论消失但没删除成功</div>
+  <div>叫「异步过滤」，风险是并发删除时状态不一致</div>
+  <div>叫「前置清理」，风险是内存泄漏</div>
+  <div class="explain">这叫「乐观更新」（Optimistic Update）—— 假设操作会成功，提前更新 UI 让用户感觉响应快。风险：如果 API 失败，UI 已经更新但数据库没变，用户看到「幻觉」评论消失。更完善的方案是乐观更新 + 失败回滚，但当前实现只做到了乐观更新，没有回滚机制。</div>
+</div>
+<pre><code class="language-typescript">// deleteComment 的乐观更新
+const deleteComment = useCallback(async (artId, commentId) => {
+  try {
+    const res = await commentApi.delete(artId, commentId);
+    if (res.success) {
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      // 没有 catch 回滚逻辑
+      return true;
+    }
+  }
+}, []);
+</code></pre>
+
+<div class="options" data-answer="3">
+  <div>`CommentItem` 通过 `useAuth()` 获取当前用户，然后比较 `user?.id === comment.author.id` 来决定是否显示删除按钮。这样做的优点是什么？</div>
+  <div>后端不需要返回当前用户ID，前端自己计算权限</div>
+  <div>权限判断放在视图层，减轻后端负担</div>
+  <div>UI 权限判断是视图层的事，后端仍是唯一信任源——后端会拒绝删除别人的评论</div>
+  <div class="explain">前端 `user?.id === comment.author.id` 只是「显示控制」——控制按钮是否渲染。后端才是「权限控制」——拒绝删除别人的评论。前端判断是 UX 优化（不显示无意义的按钮），后端判断是安全校验（防止真正删除）。两者缺一不可，前端判断不能替代后端校验。</div>
+</div>
+<pre><code class="language-typescript">// CommentItem 中的权限判断
+export function CommentItem({ comment, onDelete }) {
+  const { user } = useAuth();
+  const isOwner = user?.id === comment.author.id;
+
+  return (
+    &lt;div&gt;
+      {/* ... */}
+      {isOwner && &lt;Button onClick={handleDelete}&gt;删除&lt;/Button&gt;}
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+<div class="options" data-answer="1">
+  <div>`createComment` 成功后执行 `setComments((prev) => [newComment, ...prev])`，把新评论放在列表最前面。为什么不是放在最后？</div>
+  <div>新评论通常希望立即被看到，放在最前面符合用户预期</div>
+  <div>放在最后可以保持列表按时间排序的逻辑一致性</div>
+  <div>数组 unshift 比 push 性能更好</div>
+  <div class="explain">评论是「反向时间序」——最新在前，旧的在后。新评论放在最前面（`[newComment, ...prev]`）而不是最后（`[...prev, newComment]`），是因为用户发表后应该立刻看到自己的评论出现在顶部，符合「最新内容优先」的交互习惯。</div>
+</div>
+<pre><code class="language-typescript">// createComment 的前置插入
+if (res.success && res.data) {
+  const newComment = res.data as Comment;
+  setComments((prev) => [newComment, ...prev]);  // 头部插入
+  return true;
+}
+</code></pre>
+
+<div class="options" data-answer="1">
+  <div>`CommentsSection` 依赖 `useEffect` 调用 `loadComments(articleId)`，当 `articleId` 变化时重新加载。为什么依赖数组里还有 `loadComments`？</div>
+  <div>`loadComments` 是 `useCallback` 包装的稳定引用，实际不触发重新加载</div>
+  <div>`loadComments` 变化时需要重新加载，否则会闭包到旧的 articleId</div>
+  <div>`loadComments` 依赖数组是 ESLint 规则要求，不写会警告</div>
+  <div class="explain">`loadComments` 用 `useCallback` 包装后是稳定引用，通常不会变化。但把它放入依赖数组是防御性编程——如果未来 `loadComments` 内部逻辑变了（比如加了分页参数），依赖数组没写 `loadComments` 会导致闭包到旧的 callback，产生 bug。依赖数组完整 → 未来改代码不易出错。</div>
+</div>
+<pre><code class="language-typescript">// CommentsSection 中的 useEffect
+useEffect(() => {
+  loadComments(articleId);
+}, [articleId, loadComments]);  // articleId + loadComments
+
+// useComments 中的 loadComments 是 useCallback 包装的
+const loadComments = useCallback(async (artId, pageNum = 1) => {
+  // ...
+}, []);  // 空依赖，函数引用稳定
+</code></pre>

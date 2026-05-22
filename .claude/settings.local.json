@@ -57,7 +57,18 @@
       "Bash(pnpm dlx *)",
       "Bash(pnpm build-storybook *)",
       "Bash(curl -s -X POST http://localhost:4000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"123456788\"}')",
-      "Bash(curl -s http://localhost:4000/api/auth/me -H \"Authorization: Bearer $\\(curl -s -X POST http://localhost:4000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"123456788\"}')"
+      "Bash(curl -s http://localhost:4000/api/auth/me -H \"Authorization: Bearer $\\(curl -s -X POST http://localhost:4000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"123456788\"}')",
+      "Bash(pnpm --filter @jianshu/web test -- --run --testNamePattern=\"comment\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run --testPathPattern=\"comment\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run --testPathPattern=\"comment-form|comment-item|comment-list|use-comments\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run --testPathPattern=\"use-comments\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run --testPathPattern=\"comment-form.test|comment-item.test|comment-list.test|use-comments.test\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run src/hooks/__tests__/use-comments.test.tsx src/components/comments/__tests__/comment-list.test.tsx src/components/comments/__tests__/comment-item.test.tsx src/components/comments/__tests__/comment-form.test.tsx)",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"src/hooks/__tests__\" \"src/components/comments/__tests__\" --exclude \"src/components/tiptap/__tests__/**\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run --testPathPattern=\"comments|use-comments\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run --exclude \"**/tiptap/**\" src/hooks/__tests__/use-comments.test.tsx src/components/comments/__tests__/)",
+      "Bash(pnpm --filter @jianshu/web test -- --run --config vitest.config.ts src/hooks/__tests__/use-comments.test.tsx)",
+      "Bash(pnpm --filter @jianshu/web test -- --run src/hooks/__tests__/use-comments.test.tsx src/components/comments/__tests__/comment-list.test.tsx src/components/comments/__tests__/comment-item.test.tsx src/components/comments/__tests__/comment-form.test.tsx src/components/comments/__tests__/comments-section.test.tsx)"
     ]
   }
 }

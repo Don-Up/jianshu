@@ -88,3 +88,17 @@ export interface ArticleListParams extends PaginationParams {
   tag?: string;
   search?: string;
 }
+
+// Comment types
+export interface Comment {
+  id: string;
+  content: string;
+  createdAt: Date;
+  author: Pick<User, 'id' | 'username' | 'name' | 'avatar'>;
+}
+
+export interface CreateCommentRequest {
+  content: string;
+}
+
+export interface CommentListParams extends PaginationParams {}

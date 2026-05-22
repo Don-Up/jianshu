@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useArticle } from '@/hooks/use-article';
 import { useAuth } from '@/hooks/use-auth';
+import { CommentsSection } from '@/components/comments/comments-section';
 
 export default function ArticlePage() {
   const params = useParams();
@@ -54,8 +55,6 @@ export default function ArticlePage() {
     );
   }
 
-  console.log('isLoading:', isLoading, 'article.author.id:', article?.author?.id, 'user?.id:', user?.id, 'user object:', user);
-
   return (
     <PageLayout>
       <div className="bg-secondary/30 py-8">
@@ -72,7 +71,7 @@ export default function ArticlePage() {
         <Card>
           <CardContent className="p-6">
             <h3 className="font-bold text-foreground mb-4">评论</h3>
-            <p className="text-muted-foreground text-sm">评论功能开发中...</p>
+            <CommentsSection articleId={article.id} />
           </CardContent>
         </Card>
       </div>

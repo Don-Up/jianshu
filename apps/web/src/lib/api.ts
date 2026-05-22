@@ -6,8 +6,10 @@ import type {
   RegisterRequest,
   CreateArticleRequest,
   ArticleListParams,
+  CreateCommentRequest,
+  CommentListParams,
 } from '@jianshu/shared';
-import type { ArticleListResponse, ArticleWithAuthor } from '@/types';
+import type { ArticleListResponse, ArticleWithAuthor, CommentListResponse } from '@/types';
 import { getToken } from '@/lib/auth';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -113,7 +115,7 @@ export const articleApi = {
 
   update: (slug: string, data: Partial<CreateArticleRequest>) =>
     fetchApi<ArticleWithAuthor>(`/api/articles/${slug}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
     }),
 
@@ -154,4 +156,30 @@ export const userApi = {
       `/api/users/${username}/articles${searchParams ? `?${searchParams}` : ''}`
     );
   },
+};
+
+export const commentApi = {
+  list: (articleId: string, params?: CommentListParams) => {
+    const searchParams = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : '';
+    return fetchApi<CommentListResponse>(
+      `/api/articles/${articleId}/comments${searchParams ? `?${searchParams}` : ''}`
+    );
+  },
+
+  create: (articleId: string, data: CreateCommentRequest) =>
+    fetchApi<Comment>(`/api/articles/${articleId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (articleId: string, commentId: string) =>
+    fetchApi<void>(`/api/articles/${articleId}/comments/${commentId}`, {
+      method: 'DELETE',
+    }),
 };

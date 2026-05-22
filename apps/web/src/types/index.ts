@@ -1,4 +1,4 @@
-import type { Article, User, ApiResponse, PaginatedResponse } from '@jianshu/shared';
+import type { Article, User, ApiResponse, PaginatedResponse, Comment } from '@jianshu/shared';
 
 export interface ArticleWithAuthor extends Article {
   author: User;
@@ -6,3 +6,5 @@ export interface ArticleWithAuthor extends Article {
 
 export type ArticleListResponse = PaginatedResponse<ArticleWithAuthor>;
 export type ArticleResponse = ApiResponse<ArticleWithAuthor>;
+
+export type CommentListResponse = PaginatedResponse<Comment>;
