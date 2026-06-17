@@ -102,3 +102,15 @@ export interface CreateCommentRequest {
 }
 
 export interface CommentListParams extends PaginationParams {}
+
+// Notification types
+export interface Notification {
+  id: string;
+  type: 'COMMENT' | 'LIKE' | 'FOLLOW' | 'SYSTEM';
+  message: string;
+  link?: string | null;
+  isRead: boolean;
+  createdAt: Date;
+  actor?: Pick<User, 'id' | 'username' | 'name' | 'avatar'> | null;
+  article?: { id: string; title: string; slug: string } | null;
+}

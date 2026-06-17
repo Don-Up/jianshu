@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SearchInput } from '@/components/search/search-input';
 
 export function Header() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-4">
+          <SearchInput />
           {isAuthenticated ? (
             <>
               <Link href="/write">

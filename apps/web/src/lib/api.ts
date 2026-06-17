@@ -8,8 +8,10 @@ import type {
   ArticleListParams,
   CreateCommentRequest,
   CommentListParams,
+  Notification,
 } from '@jianshu/shared';
 import type { ArticleListResponse, ArticleWithAuthor, CommentListResponse } from '@/types';
+import type { PaginatedResponse } from '@jianshu/shared';
 import { getToken } from '@/lib/auth';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -182,4 +184,25 @@ export const commentApi = {
     fetchApi<void>(`/api/articles/${articleId}/comments/${commentId}`, {
       method: 'DELETE',
     }),
+};
+
+export const notificationApi = {
+  list: (params?: { page?: number; limit?: number }) => {
+    const searchParams = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : '';
+    return fetchApi<PaginatedResponse<Notification>>(
+      `/api/notifications${searchParams ? `?${searchParams}` : ''}`
+    );
+  },
+
+  markAsRead: (id: string) =>
+    fetchApi<void>(`/api/notifications/${id}/read`, { method: 'POST' }),
+
+  markAllAsRead: () =>
+    fetchApi<void>('/api/notifications/read-all', { method: 'POST' }),
 };

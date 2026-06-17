@@ -68,7 +68,23 @@
       "Bash(pnpm --filter @jianshu/web test -- --run --testPathPattern=\"comments|use-comments\")",
       "Bash(pnpm --filter @jianshu/web test -- --run --exclude \"**/tiptap/**\" src/hooks/__tests__/use-comments.test.tsx src/components/comments/__tests__/)",
       "Bash(pnpm --filter @jianshu/web test -- --run --config vitest.config.ts src/hooks/__tests__/use-comments.test.tsx)",
-      "Bash(pnpm --filter @jianshu/web test -- --run src/hooks/__tests__/use-comments.test.tsx src/components/comments/__tests__/comment-list.test.tsx src/components/comments/__tests__/comment-item.test.tsx src/components/comments/__tests__/comment-form.test.tsx src/components/comments/__tests__/comments-section.test.tsx)"
+      "Bash(pnpm --filter @jianshu/web test -- --run src/hooks/__tests__/use-comments.test.tsx src/components/comments/__tests__/comment-list.test.tsx src/components/comments/__tests__/comment-item.test.tsx src/components/comments/__tests__/comment-form.test.tsx src/components/comments/__tests__/comments-section.test.tsx)",
+      "Bash(pnpm --filter @jianshu/web test -- --run --testPathPattern=\"search|use-search\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run --testPathPattern=\"search-input|search-bar|use-search.test\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run --testPathPattern=\"search-input|search-bar|use-search\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run src/hooks/__tests__/use-search.test.ts src/components/search/__tests__/search-input.test.tsx src/components/layout/__tests__/search-bar.test.tsx)",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"src/hooks/__tests__/use-search\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"src/hooks/__tests__/use-search\" \"src/components/search\" \"src/components/layout/__tests__/search-bar\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"src/hooks/__tests__/use-notifications\" \"src/components/notifications\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"use-notifications.test\" \"notification-list.test\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"use-notifications.test\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"notification-list.test\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"src/components/notifications/__tests__/notification-list.test.tsx\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"use-notifications\" \"notification-list\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"use-notifications\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"notification-list\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"src/hooks/__tests__/use-notifications.test.tsx\" \"src/components/notifications/__tests__/notification-list.test.tsx\")",
+      "Bash(pnpm --filter @jianshu/web test -- --run \"src/components/notifications/__tests__\")"
     ]
   }
 }
