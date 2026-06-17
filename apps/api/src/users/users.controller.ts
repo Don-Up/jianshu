@@ -13,7 +13,7 @@ interface JwtUser {
 }
 
 @ApiTags('users')
-@Controller('users')
+@Controller({ path: 'users', version: '1' })
 export class UsersController {
   constructor(private usersService: UsersService) {}
 

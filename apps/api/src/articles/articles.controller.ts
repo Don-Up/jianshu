@@ -14,7 +14,7 @@ interface JwtUser {
 }
 
 @ApiTags('articles')
-@Controller('articles')
+@Controller({ path: 'articles', version: '1' })
 export class ArticlesController {
   constructor(private articlesService: ArticlesService) {}
 

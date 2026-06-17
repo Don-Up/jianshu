@@ -8,7 +8,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 
 @ApiTags('comments')
-@Controller('articles/:articleId/comments')
+@Controller({ path: 'articles/:articleId/comments', version: '1' })
 export class CommentsController {
   constructor(private commentsService: CommentsService) {}
 

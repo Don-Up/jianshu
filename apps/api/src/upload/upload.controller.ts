@@ -13,7 +13,7 @@ import { ApiTags, ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse } from '
 import { UploadFileResponseDto } from './dto/upload-file.dto';
 
 @ApiTags('upload')
-@Controller('upload')
+@Controller({ path: 'upload', version: '1' })
 export class UploadController {
   constructor(private uploadService: UploadService) {}
 

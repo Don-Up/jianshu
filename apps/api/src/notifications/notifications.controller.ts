@@ -7,7 +7,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 
 @ApiTags('notifications')
-@Controller('notifications')
+@Controller({ path: 'notifications', version: '1' })
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class NotificationsController {
