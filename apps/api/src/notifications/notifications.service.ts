@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { QueryNotificationDto } from './dto/query-notification.dto';
+import { NotificationsGateway } from '../gateway/notifications.gateway';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => NotificationsGateway))
+    private notificationsGateway: NotificationsGateway,
+  ) {}
 
   async findAll(userId: string, query: QueryNotificationDto) {
     const { page = 1, limit = 20 } = query;
@@ -80,7 +85,7 @@ export class NotificationsService {
       return { success: true };
     }
 
-    await this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         userId,
         type,
@@ -90,6 +95,9 @@ export class NotificationsService {
         link,
       },
     });
+
+    // Emit notification via WebSocket
+    this.notificationsGateway.notifyUser(userId, notification);
 
     return { success: true };
   }

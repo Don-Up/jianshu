@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationsService } from '../notifications.service';
 import { PrismaService } from '../../prisma.service';
+import { NotificationsGateway } from '../../gateway/notifications.gateway';
 
 describe('NotificationsService', () => {
   let notificationsService: NotificationsService;
   let prismaService: jest.Mocked<PrismaService>;
+  let notificationsGateway: jest.Mocked<NotificationsGateway>;
 
   const mockNotification = {
     id: 'notification-123',
@@ -25,6 +27,10 @@ describe('NotificationsService', () => {
   };
 
   beforeEach(async () => {
+    const mockGateway = {
+      notifyUser: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotificationsService,
@@ -35,14 +41,20 @@ describe('NotificationsService', () => {
               findMany: jest.fn(),
               count: jest.fn(),
               updateMany: jest.fn(),
+              create: jest.fn(),
             },
           },
+        },
+        {
+          provide: NotificationsGateway,
+          useValue: mockGateway,
         },
       ],
     }).compile();
 
     notificationsService = module.get<NotificationsService>(NotificationsService);
     prismaService = module.get(PrismaService);
+    notificationsGateway = module.get(NotificationsGateway);
   });
 
   afterEach(() => {
