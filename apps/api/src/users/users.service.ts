@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async findByUsername(username: string) {
     const user = await this.prisma.user.findUnique({
@@ -92,6 +96,16 @@ export class UsersService {
           followingId,
         },
       });
+
+      // Create FOLLOW notification
+      await this.notificationsService.createNotification({
+        userId: followingId,
+        type: 'FOLLOW',
+        message: '关注了你',
+        actorId: followerId,
+        link: `/user/${following.username}`,
+      });
+
       return {
         success: true,
         data: { isFollowing: true },

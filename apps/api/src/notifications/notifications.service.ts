@@ -64,4 +64,33 @@ export class NotificationsService {
 
     return { success: true, data: { count } };
   }
+
+  async createNotification(params: {
+    userId: string;
+    type: 'COMMENT' | 'LIKE' | 'FOLLOW' | 'SYSTEM';
+    message: string;
+    actorId?: string;
+    articleId?: string;
+    link?: string;
+  }) {
+    const { userId, type, message, actorId, articleId, link } = params;
+
+    // Don't notify yourself
+    if (actorId === userId) {
+      return { success: true };
+    }
+
+    await this.prisma.notification.create({
+      data: {
+        userId,
+        type,
+        message,
+        actorId,
+        articleId,
+        link,
+      },
+    });
+
+    return { success: true };
+  }
 }

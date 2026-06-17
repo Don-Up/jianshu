@@ -1,12 +1,20 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { RedisService } from '../redis/redis.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { QueryArticleDto } from './dto/query-article.dto';
 
 @Injectable()
 export class ArticlesService {
-  constructor(private prisma: PrismaService) {}
+  private logger = new Logger('ArticlesService');
+
+  constructor(
+    private prisma: PrismaService,
+    private redis: RedisService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   private generateSlug(title: string): string {
     const base = title
@@ -58,6 +66,9 @@ export class ArticlesService {
       },
     });
 
+    // Invalidate article list cache
+    await this.redis.delPattern('articles:list:*');
+
     return {
       success: true,
       data: this.formatArticle(article),
@@ -66,6 +77,17 @@ export class ArticlesService {
 
   async findAll(query: QueryArticleDto, userId?: string) {
     const { page = 1, limit = 20, authorId, tag, search } = query;
+
+    // Try cache first
+    const cacheKey = `articles:list:${JSON.stringify({ page, limit, authorId, tag, search })}:${userId || 'anonymous'}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      this.logger.log(`[CACHE HIT] findAll - key: ${cacheKey}`);
+      return JSON.parse(cached);
+    }
+
+    this.logger.log(`[CACHE MISS] findAll - key: ${cacheKey}, fetching from DB`);
+
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -120,7 +142,7 @@ export class ArticlesService {
       this.prisma.article.count({ where }),
     ]);
 
-    return {
+    const result = {
       success: true,
       data: {
         items: articles.map((a) => this.formatArticle(a, userId)),
@@ -130,6 +152,12 @@ export class ArticlesService {
         totalPages: Math.ceil(total / limit),
       },
     };
+
+    // Cache for 5 minutes
+    await this.redis.set(cacheKey, JSON.stringify(result), 300);
+    this.logger.log(`[CACHE SET] findAll - key: ${cacheKey}, ttl: 300s, items: ${total}`);
+
+    return result;
   }
 
   async findBySlug(slug: string, userId?: string) {
@@ -230,6 +258,9 @@ export class ArticlesService {
       },
     });
 
+    // Invalidate article list cache
+    await this.redis.delPattern('articles:list:*');
+
     return {
       success: true,
       data: this.formatArticle(updated),
@@ -252,6 +283,9 @@ export class ArticlesService {
     await this.prisma.article.delete({
       where: { id: article.id },
     });
+
+    // Invalidate article list cache
+    await this.redis.delPattern('articles:list:*');
 
     return {
       success: true,
@@ -292,6 +326,9 @@ export class ArticlesService {
         data: { likeCount: { decrement: 1 } },
       });
 
+      // Invalidate article list cache
+      await this.redis.delPattern('articles:list:*');
+
       return {
         success: true,
         data: { likeCount: article.likeCount - 1, isLiked: false },
@@ -308,6 +345,21 @@ export class ArticlesService {
         where: { id: article.id },
         data: { likeCount: { increment: 1 } },
       });
+
+      // Invalidate article list cache
+      await this.redis.delPattern('articles:list:*');
+
+      // Create LIKE notification for the article author
+      if (article.authorId !== userId) {
+        await this.notificationsService.createNotification({
+          userId: article.authorId,
+          type: 'LIKE',
+          message: '赞了你的文章',
+          actorId: userId,
+          articleId: article.id,
+          link: `/article/${articleSlug}`,
+        });
+      }
 
       return {
         success: true,

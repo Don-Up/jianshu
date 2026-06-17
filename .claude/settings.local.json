@@ -84,7 +84,13 @@
       "Bash(pnpm --filter @jianshu/web test -- --run \"use-notifications\")",
       "Bash(pnpm --filter @jianshu/web test -- --run \"notification-list\")",
       "Bash(pnpm --filter @jianshu/web test -- --run \"src/hooks/__tests__/use-notifications.test.tsx\" \"src/components/notifications/__tests__/notification-list.test.tsx\")",
-      "Bash(pnpm --filter @jianshu/web test -- --run \"src/components/notifications/__tests__\")"
+      "Bash(pnpm --filter @jianshu/web test -- --run \"src/components/notifications/__tests__\")",
+      "Bash(pnpm dev:api)",
+      "Bash(pnpm start:dev)",
+      "Bash(curl -s http://localhost:4000/api)",
+      "Bash(pkill -f \"nest start\")",
+      "Bash(cd /c/Users/10691/Documents/GitHub/jianshu/apps/api && ls -la src/upload/__tests__/)",
+      "Read(//c/c/Users/10691/Documents/GitHub/jianshu/apps/api/src/upload/**)"
     ]
   }
 }

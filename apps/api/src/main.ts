@@ -5,9 +5,12 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { loggerMiddleware } from './common/middleware/logging.middleware';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.setGlobalPrefix('api');
 
@@ -20,8 +23,15 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Request logging - temporarily disabled due to ESM/compat issue
-  // app.use(loggerMiddleware);
+  // Request logging
+  app.use(loggerMiddleware.use.bind(loggerMiddleware));
+
+  // Serve uploaded files for local development (when Cloudinary is not configured)
+  if (!process.env.CLOUDINARY_URL) {
+    app.useStaticAssets(join(process.cwd(), 'uploads'), {
+      prefix: '/uploads/',
+    });
+  }
 
   // Rate limiting (applied via APP_GUARD in app.module.ts)
 
