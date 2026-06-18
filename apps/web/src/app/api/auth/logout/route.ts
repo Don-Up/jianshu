@@ -8,7 +8,7 @@ export async function POST() {
     const accessToken = await getAccessToken();
 
     if (accessToken) {
-      await fetch(`${API_BASE}/api/auth/logout`, {
+      await fetch(`${API_BASE}/api/v1/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

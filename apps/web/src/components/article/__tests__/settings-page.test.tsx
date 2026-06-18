@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SettingsPage from '@/app/(app)/settings/page';
 
 // Mock next/navigation
@@ -24,10 +24,31 @@ vi.mock('@/hooks/use-auth', () => ({
     },
     isAuthenticated: true,
     isLoading: false,
+    updateUser: vi.fn(),
     login: vi.fn(),
     register: vi.fn(),
     logout: vi.fn(),
   }),
+}));
+
+// Mock use-settings hook
+vi.mock('@/hooks/use-settings', () => ({
+  useSettings: () => ({
+    updateProfile: vi.fn().mockResolvedValue(undefined),
+    changePassword: vi.fn().mockResolvedValue(undefined),
+    isUpdatingProfile: false,
+    isChangingPassword: false,
+    updateProfileError: null,
+    changePasswordError: null,
+  }),
+}));
+
+// Mock sonner toast
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 // Mock Button
@@ -54,15 +75,27 @@ vi.mock('@/components/ui/button', () => ({
 // Mock Input
 vi.mock('@/components/ui/input', () => ({
   Input: ({
+    value,
     defaultValue,
     disabled,
     type,
+    onChange,
+    placeholder,
   }: {
+    value?: string;
     defaultValue?: string;
     disabled?: boolean;
     type?: string;
+    onChange?: () => void;
+    placeholder?: string;
   }) => (
-    <input defaultValue={defaultValue} disabled={disabled} type={type || 'text'} />
+    <input
+      value={value ?? defaultValue}
+      disabled={disabled}
+      type={type || 'text'}
+      onChange={onChange}
+      placeholder={placeholder}
+    />
   ),
 }));
 

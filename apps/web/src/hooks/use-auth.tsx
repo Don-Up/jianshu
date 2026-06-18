@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  updateUser: (user: User) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, username: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -99,12 +100,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserState(null);
   }, []);
 
+  const updateUser = useCallback((updatedUser: User) => {
+    setUserState(updatedUser);
+    saveUser(updatedUser);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
         user: user,
         isLoading,
         isAuthenticated: !!user,
+        updateUser,
         login,
         register,
         logout,

@@ -24,7 +24,7 @@ async function refreshTokens(): Promise<boolean> {
   if (!refreshToken) return false;
 
   try {
-    const res = await fetch('/api/auth/refresh', {
+    const res = await fetch('/api/v1/auth/refresh', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
@@ -76,20 +76,20 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<Api
 
 export const authApi = {
   login: (data: LoginRequest) =>
-    fetchApi<{ token: string; user: User }>('/api/auth/login', {
+    fetchApi<{ token: string; user: User }>('/api/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   register: (data: RegisterRequest) =>
-    fetchApi<{ token: string; user: User }>('/api/auth/register', {
+    fetchApi<{ token: string; user: User }>('/api/v1/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  me: () => fetchApi<User>('/api/auth/me'),
+  me: () => fetchApi<User>('/api/v1/auth/me'),
 
-  logout: () => fetchApi<void>('/api/auth/logout', { method: 'POST' }),
+  logout: () => fetchApi<void>('/api/v1/auth/logout', { method: 'POST' }),
 };
 
 export const articleApi = {
@@ -102,47 +102,59 @@ export const articleApi = {
         ).toString()
       : '';
     return fetchApi<ArticleListResponse>(
-      `/api/articles${searchParams ? `?${searchParams}` : ''}`
+      `/api/v1/articles${searchParams ? `?${searchParams}` : ''}`
     );
   },
 
   getBySlug: (slug: string) =>
-    fetchApi<ArticleWithAuthor>(`/api/articles/${slug}`),
+    fetchApi<ArticleWithAuthor>(`/api/v1/articles/${slug}`),
 
   create: (data: CreateArticleRequest) =>
-    fetchApi<ArticleWithAuthor>('/api/articles', {
+    fetchApi<ArticleWithAuthor>('/api/v1/articles', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   update: (slug: string, data: Partial<CreateArticleRequest>) =>
-    fetchApi<ArticleWithAuthor>(`/api/articles/${slug}`, {
+    fetchApi<ArticleWithAuthor>(`/api/v1/articles/${slug}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
 
   delete: (slug: string) =>
-    fetchApi<void>(`/api/articles/${slug}`, {
+    fetchApi<void>(`/api/v1/articles/${slug}`, {
       method: 'DELETE',
     }),
 
   like: (slug: string) =>
-    fetchApi<{ likeCount: number }>(`/api/articles/${slug}/like`, {
+    fetchApi<{ likeCount: number }>(`/api/v1/articles/${slug}/like`, {
       method: 'POST',
     }),
 
   bookmark: (slug: string) =>
-    fetchApi<{ isBookmarked: boolean }>(`/api/articles/${slug}/bookmark`, {
+    fetchApi<{ isBookmarked: boolean }>(`/api/v1/articles/${slug}/bookmark`, {
       method: 'POST',
     }),
 };
 
 export const userApi = {
   getByUsername: (username: string) =>
-    fetchApi<User>(`/api/users/${username}`),
+    fetchApi<User>(`/api/v1/users/${username}`),
+
+  updateProfile: (data: { name?: string; bio?: string; avatar?: string }) =>
+    fetchApi<User>('/api/v1/users/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  changePassword: (data: { oldPassword: string; newPassword: string }) =>
+    fetchApi<void>('/api/v1/users/me/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   follow: (userId: string) =>
-    fetchApi<{ isFollowing: boolean }>(`/api/users/${userId}/follow`, {
+    fetchApi<{ isFollowing: boolean }>(`/api/v1/users/${userId}/follow`, {
       method: 'POST',
     }),
 
@@ -155,7 +167,7 @@ export const userApi = {
         ).toString()
       : '';
     return fetchApi<ArticleListResponse>(
-      `/api/users/${username}/articles${searchParams ? `?${searchParams}` : ''}`
+      `/api/v1/users/${username}/articles${searchParams ? `?${searchParams}` : ''}`
     );
   },
 };
@@ -170,18 +182,18 @@ export const commentApi = {
         ).toString()
       : '';
     return fetchApi<CommentListResponse>(
-      `/api/articles/${articleId}/comments${searchParams ? `?${searchParams}` : ''}`
+      `/api/v1/articles/${articleId}/comments${searchParams ? `?${searchParams}` : ''}`
     );
   },
 
   create: (articleId: string, data: CreateCommentRequest) =>
-    fetchApi<Comment>(`/api/articles/${articleId}/comments`, {
+    fetchApi<Comment>(`/api/v1/articles/${articleId}/comments`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   delete: (articleId: string, commentId: string) =>
-    fetchApi<void>(`/api/articles/${articleId}/comments/${commentId}`, {
+    fetchApi<void>(`/api/v1/articles/${articleId}/comments/${commentId}`, {
       method: 'DELETE',
     }),
 };
@@ -196,13 +208,13 @@ export const notificationApi = {
         ).toString()
       : '';
     return fetchApi<PaginatedResponse<Notification>>(
-      `/api/notifications${searchParams ? `?${searchParams}` : ''}`
+      `/api/v1/notifications${searchParams ? `?${searchParams}` : ''}`
     );
   },
 
   markAsRead: (id: string) =>
-    fetchApi<void>(`/api/notifications/${id}/read`, { method: 'POST' }),
+    fetchApi<void>(`/api/v1/notifications/${id}/read`, { method: 'POST' }),
 
   markAllAsRead: () =>
-    fetchApi<void>('/api/notifications/read-all', { method: 'POST' }),
+    fetchApi<void>('/api/v1/notifications/read-all', { method: 'POST' }),
 };

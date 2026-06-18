@@ -14,7 +14,7 @@ export async function GET() {
       );
     }
 
-    const res = await fetch(`${API_BASE}/api/auth/me`, {
+    const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

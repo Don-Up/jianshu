@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
 
   if (accessToken && !isTokenValid(accessToken) && refreshToken) {
     try {
-      const refreshResponse = await fetch(`${API_BASE}/api/auth/refresh`, {
+      const refreshResponse = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
