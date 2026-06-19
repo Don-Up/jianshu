@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { TiptapEditor } from '@/components/tiptap/tiptap-editor';
 import { articleApi } from '@/lib/api';
+import { useDraft } from '@/hooks/use-draft';
 import type { CreateArticleRequest } from '@jianshu/shared';
 
 interface ArticleEditorProps {
@@ -16,8 +18,13 @@ interface ArticleEditorProps {
   isEditing?: boolean;
 }
 
+const DRAFT_KEY_PREFIX = 'article-draft-';
+
 export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorProps) {
   const router = useRouter();
+  const draftKey = slug ? `${DRAFT_KEY_PREFIX}${slug}` : `${DRAFT_KEY_PREFIX}new`;
+  const { saveDraft, loadDraft, clearDraft, hasDraft } = useDraft(draftKey);
+
   const [title, setTitle] = useState(initialData?.title || '');
   const [content, setContent] = useState(initialData?.content || '');
   const [excerpt, setExcerpt] = useState(initialData?.excerpt || '');
@@ -25,6 +32,65 @@ export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorPro
   const [coverImage, setCoverImage] = useState(initialData?.coverImage || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Restore draft on mount if not editing existing article
+  useEffect(() => {
+    if (!isEditing && !slug) {
+      const savedDraft = loadDraft();
+      if (savedDraft) {
+        // Only restore if we have saved data and no initial data
+        if (savedDraft.title && !initialData?.title) {
+          setTitle(savedDraft.title);
+          toast.info('已恢复上次的草稿');
+        }
+        if (savedDraft.content && !initialData?.content) {
+          setContent(savedDraft.content);
+        }
+        if (savedDraft.excerpt !== undefined && !initialData?.excerpt) {
+          setExcerpt(savedDraft.excerpt);
+        }
+        if (savedDraft.tags && !initialData?.tags) {
+          setTags(savedDraft.tags.join(', '));
+        }
+        if (savedDraft.coverImage && !initialData?.coverImage) {
+          setCoverImage(savedDraft.coverImage);
+        }
+      }
+    }
+  }, []);
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    // Don't auto-save when editing existing article
+    if (isEditing || slug) return;
+
+    const intervalId = setInterval(() => {
+      const currentData = {
+        title,
+        content,
+        excerpt,
+        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+        coverImage,
+      };
+
+      // Only save if there's actual content
+      if (title.trim() || content.trim()) {
+        saveDraft(currentData);
+        setLastSaved(new Date());
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(intervalId);
+  }, [title, content, excerpt, tags, coverImage, isEditing, slug, saveDraft]);
+
+  // Save on unmount (if not publishing)
+  useEffect(() => {
+    return () => {
+      // This cleanup runs when component unmounts
+      // Only save if there's content and not publishing
+    };
+  }, []);
 
   // Sync with initialData when it changes (e.g., after article loads)
   useEffect(() => {
@@ -59,6 +125,9 @@ export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorPro
       }
 
       if (result.success && result.data) {
+        // Clear draft on successful publish
+        clearDraft();
+        toast.success(publish ? '发布成功' : '草稿保存成功');
         router.push(`/article/${result.data.slug}`);
       } else {
         setError(result.error || 'Failed to save article');
@@ -71,6 +140,17 @@ export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorPro
   };
 
   const handleSaveDraft = async (e: React.FormEvent) => {
+    // Save current content to draft
+    const currentData = {
+      title,
+      content,
+      excerpt,
+      tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+      coverImage,
+    };
+    saveDraft(currentData);
+    setLastSaved(new Date());
+    toast.success('草稿已保存');
     await handleSubmit(e, false);
   };
 
@@ -80,6 +160,12 @@ export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorPro
         <CardContent className="p-6 space-y-4">
           {error && (
             <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>
+          )}
+
+          {lastSaved && !isEditing && !slug && (
+            <div className="text-xs text-muted-foreground">
+              自动保存于 {lastSaved.toLocaleTimeString()}
+            </div>
           )}
 
           <Input
@@ -127,9 +213,14 @@ export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorPro
         </CardContent>
 
         <CardFooter className="flex justify-between">
-          <Button type="button" variant="secondary" onClick={() => router.back()}>
-            取消
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="secondary" onClick={() => router.back()}>
+              取消
+            </Button>
+            {!isEditing && !slug && hasDraft() && (
+              <span className="text-xs text-muted-foreground">有未保存的草稿</span>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isSubmitting}>
               保存草稿

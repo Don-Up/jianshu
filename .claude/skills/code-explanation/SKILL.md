@@ -14,6 +14,7 @@ description: When the user sends you code snippets with each line starting with 
 - 核心 API 和参数的含义
 - 关键逻辑的流程和目的
 - 使用场景和注意事项
+- 如果用户将某部分代码使用{{}}包裹，例如{{OnModuleInit}}，则你需要结合上下文对这一部分进行重点讲解
 
 ## 严格禁止讲解的内容（零容忍）
 ? 任何语法知识（async/await、解构、箭头函数、简写语法、模板字符串、类、装饰器等）
@@ -48,7 +49,7 @@ description: When the user sends you code snippets with each line starting with 
 3. 范围键（如 "1-5"）提供概览，独立行键（如 "2"）提供具体细节
 4. 每条讲解 2-3 句，覆盖功能和用法即可
 5. 最后一条键固定为 "总结"，概括整个代码块的职责和典型使用场景
-
+6. 对于JSON的值，可以使用``包裹重要部分(例如变量，方法或其它信息)，以突出显示
 ---
 
 ## 示例：正确 ?

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { userApi } from '@/lib/api';
@@ -13,22 +15,29 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user, isOwnProfile, initialIsFollowing }: ProfileHeaderProps) {
-  const [isFollowing, setIsFollowing] = useState(initialIsFollowing || false);
-  const [isFollowingLoading, setIsFollowingLoading] = useState(false);
+  const [optimisticIsFollowing, setOptimisticIsFollowing] = useState(initialIsFollowing || false);
+  const queryClient = useQueryClient();
 
-  const handleFollow = async () => {
-    setIsFollowingLoading(true);
-    try {
-      const res = await userApi.follow(user.id);
+  const followMutation = useMutation({
+    mutationFn: () => userApi.follow(user.id),
+    onMutate: async () => {
+      // Optimistic update: immediately update UI
+      setOptimisticIsFollowing(!optimisticIsFollowing);
+    },
+    onSuccess: (res) => {
       if (res.success && res.data) {
-        setIsFollowing(res.data.isFollowing);
+        setOptimisticIsFollowing(res.data.isFollowing);
+        // Invalidate user profile cache
+        queryClient.invalidateQueries({ queryKey: ['users', user.username] });
+        toast.success(res.data.isFollowing ? '关注成功' : '已取消关注');
       }
-    } catch (error) {
-      console.error('Failed to follow/unfollow:', error);
-    } finally {
-      setIsFollowingLoading(false);
-    }
-  };
+    },
+    onError: () => {
+      // Rollback on error
+      setOptimisticIsFollowing(!optimisticIsFollowing);
+      toast.error('操作失败，请重试');
+    },
+  });
 
   return (
     <div className="bg-background border-b">
@@ -62,12 +71,12 @@ export function ProfileHeader({ user, isOwnProfile, initialIsFollowing }: Profil
 
             {!isOwnProfile && (
               <Button
-                variant={isFollowing ? 'secondary' : 'default'}
+                variant={optimisticIsFollowing ? 'secondary' : 'default'}
                 size="sm"
-                onClick={handleFollow}
-                disabled={isFollowingLoading}
+                onClick={() => followMutation.mutate()}
+                disabled={followMutation.isPending}
               >
-                {isFollowing ? '已关注' : '关注'}
+                {followMutation.isPending ? '处理中...' : optimisticIsFollowing ? '已关注' : '关注'}
               </Button>
             )}
 

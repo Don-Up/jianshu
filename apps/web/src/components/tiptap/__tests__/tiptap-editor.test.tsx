@@ -6,6 +6,10 @@ import { TiptapEditor } from '../tiptap-editor';
 vi.mock('@tiptap/react', () => ({
   useEditor: vi.fn(() => ({
     isActive: vi.fn(),
+    getHTML: vi.fn(() => '<p>Test content</p>'),
+    commands: {
+      setContent: vi.fn(),
+    },
     chain: vi.fn(() => ({
       focus: vi.fn(() => ({
         toggleBold: vi.fn(() => ({ run: vi.fn() })),

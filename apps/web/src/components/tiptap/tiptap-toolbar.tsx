@@ -1,13 +1,18 @@
 'use client';
 
+import { useState, useRef } from 'react';
 import { type Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
+import { uploadImage, isImageFile, getImageFileLimit } from '@/lib/upload';
 
 interface TiptapToolbarProps {
   editor: Editor | null;
 }
 
 export function TiptapToolbar({ editor }: TiptapToolbarProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!editor) return null;
 
   const handleLink = () => {
@@ -26,7 +31,46 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
     }
   };
 
-  const handleImage = () => {
+  const handleImageUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!isImageFile(file)) {
+      alert('请选择图片文件');
+      return;
+    }
+
+    // Validate file size
+    if (file.size > getImageFileLimit()) {
+      alert('图片大小不能超过 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const result = await uploadImage(file);
+      if (result.success && result.url) {
+        editor.chain().focus().setImage({ src: result.url }).run();
+      } else {
+        alert(result.error || '上传失败');
+      }
+    } catch {
+      alert('上传失败');
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleImageUrl = () => {
     const url = window.prompt('输入图片 URL:');
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
@@ -70,13 +114,21 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
       label: '媒体',
       items: [
         { label: '🔗', title: '链接', action: handleLink, active: editor.isActive('link') },
-        { label: '🖼', title: '图片', action: handleImage, active: false },
+        { label: '🖼', title: '上传图片', action: handleImageUploadClick, active: false, loading: isUploading },
+        { label: '🔍', title: '图片 URL', action: handleImageUrl, active: false },
       ],
     },
   ];
 
   return (
     <div className="flex flex-wrap gap-1 p-2 border-b bg-muted/50">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
       {groups.map((group, i) => (
         <div key={i} className="flex items-center gap-1">
           {group.items.map((item, j) => (
@@ -87,9 +139,10 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
               size="sm"
               title={item.title}
               onClick={item.action}
+              disabled={(item as any).loading}
               className={item.active ? 'bg-accent' : ''}
             >
-              {item.label}
+              {(item as any).loading ? '⏳' : item.label}
             </Button>
           ))}
           {i < groups.length - 1 && <div className="w-px h-6 bg-border mx-1" />}
