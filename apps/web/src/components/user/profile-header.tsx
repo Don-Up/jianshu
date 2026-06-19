@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { userApi } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { User } from '@jianshu/shared';
 
 interface ProfileHeaderProps {
@@ -28,7 +29,7 @@ export function ProfileHeader({ user, isOwnProfile, initialIsFollowing }: Profil
       if (res.success && res.data) {
         setOptimisticIsFollowing(res.data.isFollowing);
         // Invalidate user profile cache
-        queryClient.invalidateQueries({ queryKey: ['users', user.username] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.user(user.username) });
         toast.success(res.data.isFollowing ? '关注成功' : '已取消关注');
       }
     },
