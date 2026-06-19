@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ArticleEditor } from '@/components/article/article-editor';
+import { ArticleEditorSkeleton } from '@/components/loading/skeleton';
 import { useSearchParams } from 'next/navigation';
 import { useArticle } from '@/hooks/use-article';
 import { useEffect } from 'react';
@@ -28,10 +29,7 @@ function WritePageContent() {
   if (isLoading && slug) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-muted rounded w-3/4" />
-          <div className="h-64 bg-muted rounded" />
-        </div>
+        <ArticleEditorSkeleton />
       </div>
     );
   }

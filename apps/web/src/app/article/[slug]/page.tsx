@@ -6,6 +6,7 @@ import { PageLayout } from '@/components/layout/page-layout';
 import { ArticleContent } from '@/components/article/article-content';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ArticleEditorSkeleton } from '@/components/loading/skeleton';
 import { useArticle } from '@/hooks/use-article';
 import { useAuth } from '@/hooks/use-auth';
 import { CommentsSection } from '@/components/comments/comments-section';
@@ -32,12 +33,8 @@ export default function ArticlePage() {
   if (isLoading && !article) {
     return (
       <PageLayout>
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 bg-muted rounded w-3/4" />
-            <div className="h-6 bg-muted rounded w-1/4" />
-            <div className="h-64 bg-muted rounded" />
-          </div>
+        <div className="bg-secondary/30 py-8">
+          <ArticleEditorSkeleton />
         </div>
       </PageLayout>
     );

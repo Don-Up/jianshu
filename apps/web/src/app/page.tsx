@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ArticleList } from '@/components/article/article-list';
+import { ArticleListSkeleton } from '@/components/loading/skeleton';
 import { articleApi } from '@/lib/api';
 import type { ArticleWithAuthor } from '@/types';
 
@@ -30,7 +31,7 @@ export default function Home() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-foreground">发现</h1>
         </div>
-        <ArticleList articles={articles} isLoading={isLoading} />
+        {isLoading ? <ArticleListSkeleton count={5} /> : <ArticleList articles={articles} />}
       </div>
     </PageLayout>
   );

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ProfileHeader } from '@/components/user/profile-header';
+import { ProfileHeaderSkeleton, ArticleListSkeleton } from '@/components/loading/skeleton';
 import { ArticleList } from '@/components/article/article-list';
 import { useAuth } from '@/hooks/use-auth';
 import { userApi } from '@/lib/api';
@@ -51,8 +52,9 @@ export default function UserProfilePage() {
   if (isLoading) {
     return (
       <PageLayout>
-        <div className="animate-pulse">
-          <div className="h-40 bg-muted" />
+        <ProfileHeaderSkeleton />
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <ArticleListSkeleton count={5} />
         </div>
       </PageLayout>
     );
