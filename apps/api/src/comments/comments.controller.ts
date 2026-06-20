@@ -1,46 +1,56 @@
-import { Controller, Get, Post, Delete, Param, Query, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { QueryCommentDto } from './dto/query-comment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 
 @ApiTags('comments')
-@Controller({ path: 'articles/:articleId/comments', version: '1' })
+@Controller({ version: '1' })
 export class CommentsController {
   constructor(private commentsService: CommentsService) {}
 
-  @Get()
+  @Get('articles/:slug/comments')
   @ApiOperation({ summary: 'Get comments for an article' })
-  async findAll(
-    @Param('articleId') articleId: string,
-    @Query() query: QueryCommentDto,
-  ) {
-    return this.commentsService.findByArticle(articleId, query);
+  async findAll(@Param('slug') slug: string, @Request() req: any) {
+    const userId = req.user?.id;
+    return this.commentsService.findByArticle(slug, userId);
   }
 
-  @Post()
+  @Post('articles/:slug/comments')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a comment' })
+  @ApiOperation({ summary: 'Create a comment or reply' })
   async create(
-    @Param('articleId') articleId: string,
+    @Param('slug') slug: string,
     @CurrentUser() user: User,
     @Body() dto: CreateCommentDto,
   ) {
-    return this.commentsService.create(articleId, user.id, dto);
+    return this.commentsService.create(slug, user.id, dto);
   }
 
-  @Delete(':id')
+  @Delete('comments/:id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a comment' })
-  async delete(
-    @Param('id') id: string,
-    @CurrentUser() user: User,
-  ) {
+  async delete(@Param('id') id: string, @CurrentUser() user: User) {
     return this.commentsService.delete(id, user.id);
+  }
+
+  @Post('comments/:id/like')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Like a comment' })
+  async like(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.commentsService.likeComment(id, user.id);
+  }
+
+  @Delete('comments/:id/like')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Unlike a comment' })
+  async unlike(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.commentsService.unlikeComment(id, user.id);
   }
 }

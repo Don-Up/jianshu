@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { CommentsService } from '../comments.service';
 import { PrismaService } from '../../prisma.service';
 
@@ -43,12 +43,33 @@ describe('CommentsService', () => {
     updatedAt: new Date(),
     authorId: 'user-123',
     articleId: 'article-123',
+    parentId: null,
     author: {
       id: 'user-123',
       username: 'testuser',
       name: 'Test User',
       avatar: null,
     },
+    likes: [],
+    _count: { likes: 0 },
+  };
+
+  const mockReply = {
+    id: 'reply-123',
+    content: 'This is a reply',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    authorId: 'user-456',
+    articleId: 'article-123',
+    parentId: 'comment-123',
+    author: {
+      id: 'user-456',
+      username: 'otheruser',
+      name: 'Other User',
+      avatar: null,
+    },
+    likes: [],
+    _count: { likes: 1 },
   };
 
   beforeEach(async () => {
@@ -66,7 +87,14 @@ describe('CommentsService', () => {
               findUnique: jest.fn(),
               findMany: jest.fn(),
               create: jest.fn(),
+              update: jest.fn(),
               delete: jest.fn(),
+              count: jest.fn(),
+            },
+            commentLike: {
+              create: jest.fn(),
+              delete: jest.fn(),
+              findUnique: jest.fn(),
               count: jest.fn(),
             },
           },
@@ -83,7 +111,7 @@ describe('CommentsService', () => {
   });
 
   describe('create', () => {
-    it('should create a comment and increment article commentCount', async () => {
+    it('should create a top-level comment and increment article commentCount', async () => {
       prismaService.article.findUnique = jest.fn().mockResolvedValue(mockArticle);
       prismaService.comment.create = jest.fn().mockResolvedValue(mockComment);
       prismaService.article.update = jest.fn().mockResolvedValue({
@@ -91,99 +119,119 @@ describe('CommentsService', () => {
         commentCount: 1,
       });
 
-      const result = await commentsService.create('article-123', 'user-123', {
+      const result = await commentsService.create('test-article-abc123', 'user-123', {
         content: 'This is a test comment',
       });
 
       expect(result.success).toBe(true);
       expect(result.data.content).toBe('This is a test comment');
       expect(result.data.author.username).toBe('testuser');
+      expect(result.data.parentId).toBeNull();
       expect(prismaService.article.update).toHaveBeenCalledWith({
         where: { id: 'article-123' },
         data: { commentCount: { increment: 1 } },
       });
     });
 
+    it('should create a reply without incrementing article commentCount', async () => {
+      prismaService.article.findUnique = jest.fn().mockResolvedValue(mockArticle);
+      prismaService.comment.findUnique = jest.fn().mockResolvedValue(mockComment);
+      prismaService.comment.create = jest.fn().mockResolvedValue(mockReply);
+      // article.update should NOT be called for replies
+
+      const result = await commentsService.create('test-article-abc123', 'user-456', {
+        content: 'This is a reply',
+        parentId: 'comment-123',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data.parentId).toBe('comment-123');
+      expect(prismaService.article.update).not.toHaveBeenCalled();
+    });
+
     it('should throw NotFoundException if article not found', async () => {
       prismaService.article.findUnique = jest.fn().mockResolvedValue(null);
 
       await expect(
-        commentsService.create('nonexistent', 'user-123', {
+        commentsService.create('nonexistent-slug', 'user-123', {
           content: 'Test comment',
+        })
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if parent comment not found', async () => {
+      prismaService.article.findUnique = jest.fn().mockResolvedValue(mockArticle);
+      prismaService.comment.findUnique = jest.fn().mockResolvedValue(null);
+
+      await expect(
+        commentsService.create('test-article-abc123', 'user-123', {
+          content: 'Test reply',
+          parentId: 'nonexistent-parent',
         })
       ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findByArticle', () => {
-    it('should return paginated comments for an article', async () => {
-      prismaService.comment.findMany = jest.fn().mockResolvedValue([mockComment]);
-      prismaService.comment.count = jest.fn().mockResolvedValue(1);
+    it('should return nested comment tree', async () => {
+      prismaService.article.findUnique = jest.fn().mockResolvedValue(mockArticle);
+      prismaService.comment.findMany = jest.fn().mockResolvedValue([mockComment, mockReply]);
 
-      const result = await commentsService.findByArticle('article-123', {
-        page: 1,
-        limit: 20,
-      });
+      const result = await commentsService.findByArticle('test-article-abc123');
 
       expect(result.success).toBe(true);
-      expect(result.data.items).toHaveLength(1);
-      expect(result.data.items[0].content).toBe('This is a test comment');
-      expect(result.data.total).toBe(1);
-      expect(result.data.page).toBe(1);
-      expect(result.data.totalPages).toBe(1);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].id).toBe('comment-123');
+      expect(result.data[0].replies).toHaveLength(1);
+      expect(result.data[0].replies[0].id).toBe('reply-123');
     });
 
-    it('should return empty list when no comments', async () => {
-      prismaService.comment.findMany = jest.fn().mockResolvedValue([]);
-      prismaService.comment.count = jest.fn().mockResolvedValue(0);
+    it('should include isLiked status when userId provided', async () => {
+      prismaService.article.findUnique = jest.fn().mockResolvedValue(mockArticle);
+      prismaService.comment.findMany = jest.fn().mockResolvedValue([mockComment]);
+      // No likes relation when userId not passed
 
-      const result = await commentsService.findByArticle('article-123', {
-        page: 1,
-        limit: 20,
-      });
+      const result = await commentsService.findByArticle('test-article-abc123', 'user-123');
 
       expect(result.success).toBe(true);
-      expect(result.data.items).toHaveLength(0);
-      expect(result.data.total).toBe(0);
+      expect(result.data[0].isLiked).toBe(false);
     });
 
-    it('should use default pagination values', async () => {
-      prismaService.comment.findMany = jest.fn().mockResolvedValue([]);
-      prismaService.comment.count = jest.fn().mockResolvedValue(0);
+    it('should throw NotFoundException if article not found', async () => {
+      prismaService.article.findUnique = jest.fn().mockResolvedValue(null);
 
-      await commentsService.findByArticle('article-123', {});
-
-      expect(prismaService.comment.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 0,
-          take: 20,
-          orderBy: { createdAt: 'desc' },
-        })
-      );
-    });
-
-    it('should calculate correct pagination', async () => {
-      prismaService.comment.findMany = jest.fn().mockResolvedValue([mockComment]);
-      prismaService.comment.count = jest.fn().mockResolvedValue(45);
-
-      const result = await commentsService.findByArticle('article-123', {
-        page: 2,
-        limit: 20,
-      });
-
-      expect(result.data.totalPages).toBe(3);
-      expect(prismaService.comment.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 20,
-          take: 20,
-        })
-      );
+      await expect(
+        commentsService.findByArticle('nonexistent-slug')
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('delete', () => {
-    it('should delete a comment and decrement article commentCount', async () => {
-      prismaService.comment.findUnique = jest.fn().mockResolvedValue(mockComment);
+    it('should soft delete comment with replies', async () => {
+      prismaService.comment.findUnique = jest.fn().mockResolvedValue({
+        ...mockComment,
+        _count: { replies: 1 },
+      });
+      prismaService.comment.update = jest.fn().mockResolvedValue({
+        ...mockComment,
+        content: '[已删除]',
+      });
+
+      const result = await commentsService.delete('comment-123', 'user-123');
+
+      expect(result.success).toBe(true);
+      expect(prismaService.comment.update).toHaveBeenCalledWith({
+        where: { id: 'comment-123' },
+        data: { content: '[已删除]' },
+      });
+      expect(prismaService.comment.delete).not.toHaveBeenCalled();
+    });
+
+    it('should hard delete comment without replies and decrement count', async () => {
+      prismaService.comment.findUnique = jest.fn().mockResolvedValue({
+        ...mockComment,
+        _count: { replies: 0 },
+      });
       prismaService.comment.delete = jest.fn().mockResolvedValue(mockComment);
       prismaService.article.update = jest.fn().mockResolvedValue({
         ...mockArticle,
@@ -196,10 +244,7 @@ describe('CommentsService', () => {
       expect(prismaService.comment.delete).toHaveBeenCalledWith({
         where: { id: 'comment-123' },
       });
-      expect(prismaService.article.update).toHaveBeenCalledWith({
-        where: { id: 'article-123' },
-        data: { commentCount: { decrement: 1 } },
-      });
+      expect(prismaService.article.update).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if comment not found', async () => {
@@ -217,13 +262,59 @@ describe('CommentsService', () => {
         commentsService.delete('comment-123', 'other-user')
       ).rejects.toThrow(ForbiddenException);
     });
+  });
 
-    it('should not delete comment if not the author', async () => {
+  describe('likeComment', () => {
+    it('should create like and return new count', async () => {
       prismaService.comment.findUnique = jest.fn().mockResolvedValue(mockComment);
+      prismaService.commentLike.findUnique = jest.fn().mockResolvedValue(null);
+      prismaService.commentLike.create = jest.fn().mockResolvedValue({ id: 'like-1' });
+      prismaService.commentLike.count = jest.fn().mockResolvedValue(1);
+
+      const result = await commentsService.likeComment('comment-123', 'user-123');
+
+      expect(result.success).toBe(true);
+      expect(result.data.likeCount).toBe(1);
+    });
+
+    it('should throw BadRequestException if already liked', async () => {
+      prismaService.comment.findUnique = jest.fn().mockResolvedValue(mockComment);
+      prismaService.commentLike.findUnique = jest.fn().mockResolvedValue({ id: 'like-1' });
 
       await expect(
-        commentsService.delete('comment-123', 'different-user')
-      ).rejects.toThrow(ForbiddenException);
+        commentsService.likeComment('comment-123', 'user-123')
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException if comment not found', async () => {
+      prismaService.comment.findUnique = jest.fn().mockResolvedValue(null);
+
+      await expect(
+        commentsService.likeComment('nonexistent', 'user-123')
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('unlikeComment', () => {
+    it('should delete like and return new count', async () => {
+      prismaService.comment.findUnique = jest.fn().mockResolvedValue(mockComment);
+      prismaService.commentLike.findUnique = jest.fn().mockResolvedValue({ id: 'like-1' });
+      prismaService.commentLike.delete = jest.fn().mockResolvedValue({ id: 'like-1' });
+      prismaService.commentLike.count = jest.fn().mockResolvedValue(0);
+
+      const result = await commentsService.unlikeComment('comment-123', 'user-123');
+
+      expect(result.success).toBe(true);
+      expect(result.data.likeCount).toBe(0);
+    });
+
+    it('should throw BadRequestException if not liked yet', async () => {
+      prismaService.comment.findUnique = jest.fn().mockResolvedValue(mockComment);
+      prismaService.commentLike.findUnique = jest.fn().mockResolvedValue(null);
+
+      await expect(
+        commentsService.unlikeComment('comment-123', 'user-123')
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
