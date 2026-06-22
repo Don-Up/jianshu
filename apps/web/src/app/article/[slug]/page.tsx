@@ -68,7 +68,7 @@ export default function ArticlePage() {
         <Card>
           <CardContent className="p-6">
             <h3 className="font-bold text-foreground mb-4">评论</h3>
-            <CommentsSection articleId={article.id} />
+            <CommentsSection slug={article.slug} />
           </CardContent>
         </Card>
       </div>

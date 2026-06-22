@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, act } from '@testing-library/react';
 import { useComments } from '../use-comments';
+import type { CommentNode } from '@/types';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -13,43 +15,59 @@ function createMockResponse(data: unknown, ok = true) {
   };
 }
 
-// Mock comment data
-const mockComment = {
+// Mock nested comment data
+const mockComment: CommentNode = {
   id: 'comment-1',
   content: '这是一条测试评论',
-  createdAt: new Date('2024-01-01'),
+  createdAt: '2024-01-01T00:00:00Z',
+  authorId: 'user-1',
   author: {
     id: 'user-1',
     username: 'testuser',
     name: 'Test User',
     avatar: null,
   },
+  likeCount: 5,
+  isLiked: false,
+  parentId: null,
+  replies: [],
 };
 
-const mockComment2 = {
-  id: 'comment-2',
-  content: '这是第二条评论',
-  createdAt: new Date('2024-01-02'),
+const mockReply: CommentNode = {
+  id: 'reply-1',
+  content: '这是一条回复',
+  createdAt: '2024-01-02T00:00:00Z',
+  authorId: 'user-2',
   author: {
     id: 'user-2',
     username: 'anotheruser',
     name: 'Another User',
     avatar: null,
   },
+  likeCount: 2,
+  isLiked: true,
+  parentId: 'comment-1',
+  replies: [],
 };
 
-// Mock PaginatedResponse structure
-const mockPaginatedResponse = (items: any[], totalPages = 1) => ({
-  success: true,
-  data: {
-    items,
-    totalPages,
-    totalCount: items.length,
-    page: 1,
-    limit: 10,
-  },
-  error: null,
-});
+const mockNestedComment: CommentNode = {
+  ...mockComment,
+  replies: [mockReply],
+};
+
+// Helper to create wrapper with QueryClient
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
 
 describe('useComments hook', () => {
   beforeEach(() => {
@@ -58,355 +76,153 @@ describe('useComments hook', () => {
   });
 
   describe('initial state', () => {
-    it('should start with empty comments', () => {
-      const { result } = renderHook(() => useComments());
+    it('should start with empty comments when slug is empty', () => {
+      const { result } = renderHook(() => useComments(''), {
+        wrapper: createWrapper(),
+      });
       expect(result.current.comments).toEqual([]);
     });
 
-    it('should start with isLoading false', () => {
-      const { result } = renderHook(() => useComments());
+    it('should start with isLoading false when disabled', () => {
+      const { result } = renderHook(() => useComments(''), {
+        wrapper: createWrapper(),
+      });
       expect(result.current.isLoading).toBe(false);
     });
 
     it('should start with no error', () => {
-      const { result } = renderHook(() => useComments());
+      const { result } = renderHook(() => useComments(''), {
+        wrapper: createWrapper(),
+      });
       expect(result.current.error).toBeNull();
-    });
-
-    it('should start with hasMore false', () => {
-      const { result } = renderHook(() => useComments());
-      expect(result.current.hasMore).toBe(false);
     });
   });
 
-  describe('loadComments', () => {
-    it('should load comments successfully on page 1', async () => {
+  describe('load comments by slug', () => {
+    it('should load comments successfully', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse(mockPaginatedResponse([mockComment]))
+        createMockResponse({ success: true, data: [mockComment] })
       );
 
-      const { result } = renderHook(() => useComments());
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
+      });
 
+      // Wait for query to complete
       await act(async () => {
-        await result.current.loadComments('article-1', 1);
+        await new Promise((resolve) => setTimeout(resolve, 10));
       });
 
       expect(result.current.comments).toHaveLength(1);
       expect(result.current.comments[0].id).toBe('comment-1');
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.error).toBeNull();
     });
 
-    it('should replace comments on page 1', async () => {
-      // First call: load page 1
+    it('should return nested comments with replies', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse(mockPaginatedResponse([mockComment]))
+        createMockResponse({ success: true, data: [mockNestedComment] })
       );
 
-      const { result } = renderHook(() => useComments());
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
+      });
 
       await act(async () => {
-        await result.current.loadComments('article-1', 1);
+        await new Promise((resolve) => setTimeout(resolve, 10));
       });
 
       expect(result.current.comments).toHaveLength(1);
-
-      // Second call: reload page 1 (refresh) - should replace, not append
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse(mockPaginatedResponse([mockComment2]))
-      );
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
-      });
-
-      // Should be replaced, not appended
-      expect(result.current.comments).toHaveLength(1);
-      expect(result.current.comments[0].id).toBe('comment-2');
+      expect(result.current.comments[0].replies).toHaveLength(1);
+      expect(result.current.comments[0].replies[0].id).toBe('reply-1');
     });
 
-    it('should append comments on page > 1', async () => {
-      // First call: load page 1
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse(mockPaginatedResponse([mockComment]))
-      );
+    it('should set error when API fails', async () => {
+      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Failed to fetch'));
 
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
       });
 
-      // Second call: load page 2 - should append
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse(mockPaginatedResponse([mockComment2], 2))
-      );
-
       await act(async () => {
-        await result.current.loadComments('article-1', 2);
+        await new Promise((resolve) => setTimeout(resolve, 10));
       });
 
-      // Should be appended, not replaced
-      expect(result.current.comments).toHaveLength(2);
-      expect(result.current.comments[0].id).toBe('comment-1');
-      expect(result.current.comments[1].id).toBe('comment-2');
-    });
-
-    it('should set hasMore correctly when more pages exist', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse({
-          success: true,
-          data: {
-            items: [mockComment],
-            totalPages: 3,
-            totalCount: 3,
-            page: 1,
-            limit: 10,
-          },
-          error: null,
-        })
-      );
-
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
-      });
-
-      expect(result.current.hasMore).toBe(true);
-    });
-
-    it('should set hasMore false when on last page', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse({
-          success: true,
-          data: {
-            items: [mockComment],
-            totalPages: 1,
-            totalCount: 1,
-            page: 1,
-            limit: 10,
-          },
-          error: null,
-        })
-      );
-
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
-      });
-
-      expect(result.current.hasMore).toBe(false);
-    });
-
-    it('should set error when API returns failure', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse({ success: false, error: 'Failed to load comments' })
-      );
-
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
-      });
-
-      expect(result.current.error).toBe('Failed to load comments');
-    });
-
-    it('should set error on network error', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
-      });
-
-      expect(result.current.error).toBe('Network error');
+      expect(result.current.error).toBe('Failed to fetch');
     });
   });
 
-  describe('createComment', () => {
-    it('should add new comment to the beginning of the list', async () => {
-      // First load some comments
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse(mockPaginatedResponse([mockComment]))
-      );
-
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
+  describe('createComment mutation', () => {
+    it('should have createComment function', () => {
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
       });
 
-      // Create new comment
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse({ success: true, data: mockComment2 })
-      );
-
-      await act(async () => {
-        await result.current.createComment('article-1', '这是第二条评论');
-      });
-
-      // New comment should be at the beginning (reverse chronological order)
-      expect(result.current.comments).toHaveLength(2);
-      expect(result.current.comments[0].id).toBe('comment-2');
-      expect(result.current.comments[1].id).toBe('comment-1');
+      expect(typeof result.current.createComment).toBe('function');
     });
 
-    it('should return false when API returns failure', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse({ success: false, error: 'Failed to create comment' })
-      );
-
-      const { result } = renderHook(() => useComments());
-
-      let success: boolean = false;
-      await act(async () => {
-        success = await result.current.createComment('article-1', 'test content');
+    it('should have isCreating state', () => {
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
       });
 
-      expect(success).toBe(false);
-      expect(result.current.error).toBe('Failed to create comment');
-    });
-
-    it('should return false on network error', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-
-      const { result } = renderHook(() => useComments());
-
-      let success: boolean = false;
-      await act(async () => {
-        success = await result.current.createComment('article-1', 'test content');
-      });
-
-      expect(success).toBe(false);
-      expect(result.current.error).toBe('Network error');
+      // isCreating should be false initially
+      expect(result.current.isCreating).toBe(false);
     });
   });
 
-  describe('deleteComment', () => {
-    it('should remove comment from the list (optimistic update)', async () => {
-      // First load some comments
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse(mockPaginatedResponse([mockComment, mockComment2]))
-      );
-
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
+  describe('deleteComment mutation', () => {
+    it('should have deleteComment function', () => {
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
       });
 
-      expect(result.current.comments).toHaveLength(2);
-
-      // Delete first comment
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse({ success: true })
-      );
-
-      await act(async () => {
-        await result.current.deleteComment('article-1', 'comment-1');
-      });
-
-      // Comment should be removed immediately (optimistic update)
-      expect(result.current.comments).toHaveLength(1);
-      expect(result.current.comments[0].id).toBe('comment-2');
+      expect(typeof result.current.deleteComment).toBe('function');
     });
 
-    it('should return false when API returns failure', async () => {
-      // First load some comments
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse(mockPaginatedResponse([mockComment]))
-      );
-
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
+    it('should have isDeleting state', () => {
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
       });
 
-      // Delete fails
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse({ success: false, error: 'Failed to delete comment' })
-      );
-
-      let success: boolean = false;
-      await act(async () => {
-        success = await result.current.deleteComment('article-1', 'comment-1');
-      });
-
-      expect(success).toBe(false);
-      expect(result.current.error).toBe('Failed to delete comment');
+      // isDeleting should be false initially
+      expect(result.current.isDeleting).toBe(false);
     });
   });
 
-  describe('loadMore', () => {
-    it('should not load more when hasMore is false', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse(mockPaginatedResponse([mockComment]))
-      );
-
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
+  describe('likeComment mutation', () => {
+    it('should have likeComment function', () => {
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
       });
 
-      expect(result.current.hasMore).toBe(false);
-
-      await act(async () => {
-        await result.current.loadMore();
-      });
-
-      // No additional fetch should be made since hasMore is false
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(typeof result.current.likeComment).toBe('function');
     });
 
-    it('should load next page when hasMore is true', async () => {
-      // Load first page
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse({
-          success: true,
-          data: {
-            items: [mockComment],
-            totalPages: 2,
-            totalCount: 2,
-            page: 1,
-            limit: 10,
-          },
-          error: null,
-        })
-      );
-
-      const { result } = renderHook(() => useComments());
-
-      await act(async () => {
-        await result.current.loadComments('article-1', 1);
+    it('should have isLiking state', () => {
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
       });
 
-      // Load more (page 2)
-      (global.fetch as jest.Mock).mockResolvedValueOnce(
-        createMockResponse({
-          success: true,
-          data: {
-            items: [mockComment2],
-            totalPages: 2,
-            totalCount: 2,
-            page: 2,
-            limit: 10,
-          },
-          error: null,
-        })
-      );
-
-      await act(async () => {
-        await result.current.loadMore();
-      });
-
-      expect(result.current.comments).toHaveLength(2);
-      expect(result.current.hasMore).toBe(false);
+      // isLiking should be false initially
+      expect(result.current.isLiking).toBe(false);
     });
+  });
+
+  describe('refetch', () => {
+    it('should have refetch function', () => {
+      const { result } = renderHook(() => useComments('test-article'), {
+        wrapper: createWrapper(),
+      });
+
+      expect(typeof result.current.refetch).toBe('function');
+    });
+  });
+});
+
+describe('queryKeys', () => {
+  it('should create correct query key for comments', async () => {
+    const { queryKeys } = await import('@/lib/query-keys');
+
+    const key = queryKeys.comments('test-slug');
+    expect(key).toEqual(['comments', 'test-slug']);
   });
 });

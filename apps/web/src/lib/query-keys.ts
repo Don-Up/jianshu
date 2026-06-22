@@ -15,4 +15,7 @@ export const queryKeys = {
 
   // Notifications
   notifications: ['notifications'] as const,
+
+  // Comments
+  comments: (slug: string) => ['comments', slug] as const,
 };

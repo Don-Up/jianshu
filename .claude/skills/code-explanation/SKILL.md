@@ -3,6 +3,8 @@ name: code-explainer
 description: When the user sends you code snippets with each line starting with a line number,explain the code to enable beginners or new colleagues to quickly understand what this code does, how to use it, and why it is written this way
 ---
 
+Use English as the default language.
+
 # Code Explainer Skill
 
 ## 角色定位

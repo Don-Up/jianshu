@@ -173,29 +173,34 @@ export const userApi = {
 };
 
 export const commentApi = {
-  list: (articleId: string, params?: CommentListParams) => {
-    const searchParams = params
-      ? new URLSearchParams(
-          Object.entries(params)
-            .filter(([, v]) => v !== undefined)
-            .map(([k, v]) => [k, String(v)])
-        ).toString()
-      : '';
+  list: (slug: string) => {
     return fetchApi<CommentListResponse>(
-      `/api/v1/articles/${articleId}/comments${searchParams ? `?${searchParams}` : ''}`
+      `/api/v1/articles/${slug}/comments`
     );
   },
 
-  create: (articleId: string, data: CreateCommentRequest) =>
-    fetchApi<Comment>(`/api/v1/articles/${articleId}/comments`, {
+  create: (slug: string, data: CreateCommentRequest) =>
+    fetchApi<Comment>(`/api/v1/articles/${slug}/comments`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  delete: (articleId: string, commentId: string) =>
-    fetchApi<void>(`/api/v1/articles/${articleId}/comments/${commentId}`, {
+  delete: (commentId: string) =>
+    fetchApi<void>(`/api/v1/comments/${commentId}`, {
       method: 'DELETE',
     }),
+
+  like: (commentId: string) =>
+    fetchApi<{ success: boolean; data: { likeCount: number } }>(
+      `/api/v1/comments/${commentId}/like`,
+      { method: 'POST' }
+    ),
+
+  unlike: (commentId: string) =>
+    fetchApi<{ success: boolean; data: { likeCount: number } }>(
+      `/api/v1/comments/${commentId}/like`,
+      { method: 'DELETE' }
+    ),
 };
 
 export const notificationApi = {

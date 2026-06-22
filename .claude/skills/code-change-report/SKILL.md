@@ -3,6 +3,8 @@ name: code-change-report
 description: Generate a comprehensive code change summary report after feature development.
 ---
 
+Use English as the default language.
+
 ### 第一部分: 概述
 
 简要描述此次开发和改动的内容(200字以内)。
