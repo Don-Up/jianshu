@@ -1,41 +1,64 @@
 'use client';
 
 import { CommentItem } from './comment-item';
-import { Button } from '@/components/ui/button';
-import type { Comment } from '@jianshu/shared';
+import type { CommentNode } from '@/types';
 
 interface CommentListProps {
-  comments: Comment[];
-  hasMore: boolean;
+  comments: CommentNode[];
   isLoading: boolean;
-  onDelete: (commentId: string) => Promise<boolean>;
-  onLoadMore: () => void;
+  onDelete: (commentId: string) => void;
+  onLike: (commentId: string, isLiked: boolean) => void;
+  onReply?: (parentId: string, content: string) => void;
+  isDeleting?: boolean;
+  isLiking?: boolean;
 }
 
-export function CommentList({ comments, hasMore, isLoading, onDelete, onLoadMore }: CommentListProps) {
-  if (comments.length === 0 && !isLoading) {
+export function CommentList({
+  comments,
+  isLoading,
+  onDelete,
+  onLike,
+  onReply,
+  isDeleting = false,
+  isLiking = false,
+}: CommentListProps) {
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex gap-3 animate-pulse">
+            <div className="h-8 w-8 rounded-full bg-muted" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-24 rounded bg-muted" />
+              <div className="h-4 w-full rounded bg-muted" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (comments.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-8 text-center">
-        暂无评论，快来发表第一条评论吧
+        No comments yet. Be the first to comment!
       </p>
     );
   }
 
   return (
-    <div>
+    <div className="divide-y divide-border">
       {comments.map((comment) => (
-        <div key={comment.id} className="border-b last:border-b-0">
-          <CommentItem comment={comment} onDelete={onDelete} />
-        </div>
+        <CommentItem
+          key={comment.id}
+          comment={comment}
+          onDelete={onDelete}
+          onLike={onLike}
+          onReply={onReply}
+          isDeleting={isDeleting}
+          isLiking={isLiking}
+        />
       ))}
-
-      {hasMore && (
-        <div className="py-4 text-center">
-          <Button variant="outline" onClick={onLoadMore} disabled={isLoading}>
-            {isLoading ? '加载中...' : '加载更多'}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

@@ -8,9 +8,14 @@ import { useAuth } from '@/hooks/use-auth';
 interface CommentFormProps {
   onSubmit: (content: string) => Promise<boolean>;
   isSubmitting?: boolean;
+  placeholder?: string;
 }
 
-export function CommentForm({ onSubmit, isSubmitting = false }: CommentFormProps) {
+export function CommentForm({
+  onSubmit,
+  isSubmitting = false,
+  placeholder = 'Write a comment...',
+}: CommentFormProps) {
   const [content, setContent] = useState('');
   const { isAuthenticated } = useAuth();
 
@@ -27,11 +32,11 @@ export function CommentForm({ onSubmit, isSubmitting = false }: CommentFormProps
   if (!isAuthenticated) {
     return (
       <div className="text-sm text-muted-foreground">
-        请{' '}
+        Please{' '}
         <a href="/login" className="text-primary underline hover:underline">
-          登录
-        </a>
-        {' '}后发表评论
+          login
+        </a>{' '}
+        to comment
       </div>
     );
   }
@@ -41,13 +46,13 @@ export function CommentForm({ onSubmit, isSubmitting = false }: CommentFormProps
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="写下你的评论..."
+        placeholder={placeholder}
         className="min-h-[80px] resize-y"
         maxLength={2000}
       />
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting || !content.trim()}>
-          {isSubmitting ? '发布中...' : '发布评论'}
+          {isSubmitting ? 'Posting...' : 'Post Comment'}
         </Button>
       </div>
     </form>

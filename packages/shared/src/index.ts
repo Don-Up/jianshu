@@ -99,6 +99,7 @@ export interface Comment {
 
 export interface CreateCommentRequest {
   content: string;
+  parentId?: string; // for nested replies
 }
 
 export interface CommentListParams extends PaginationParams {}

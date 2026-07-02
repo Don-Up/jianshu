@@ -15,9 +15,12 @@ Use English as the default language.
 2. 新增文件: 表格，第一列是文件路径，第二列是功能类别，第三列是说明。
 3. 修改文件: 表格，第一列是文件路径，第二列是功能类别，第三列是改动说明。
 4. mermaid类图: 包含了新增文件和修改文件的类图，帮助开发者快速了解代码结构和类之间的关系。
+5. API Reference: 列出新增或修改的API，并给出API的详细说明。包含三列: Property / Method,	Description,	Example。例如, 属性: `id`: **string**	| Unique comment identifier	| "comment-abc123" |, 方法: `onDelete`(commentId: string): **void**	| Pass delete callback to CommentItem | onDelete("c1") |
+
+#### 
 
 ### 第三部分: 详细改动说明
-以"文件名[修改/新增](文件相对路径)"为标题，将每个新增/改动的文件的关键代码贴出来，并以列表的格式给出说明。
+以"文件名[修改/新增](文件相对路径)"为标题，将每个新增/改动的文件的关键代码贴出来(首行添加文件名注释)，并以列表的格式给出说明。
 
 ### 第四部分: 测试方法
 

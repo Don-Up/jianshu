@@ -9,7 +9,7 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// Mock useAuth hook - define as variable so we can configure per test
+// Mock useAuth hook
 const mockUseAuth = vi.fn();
 vi.mock('@/hooks/use-auth', () => ({
   useAuth: () => mockUseAuth(),
@@ -30,9 +30,8 @@ describe('CommentForm', () => {
 
       render(<CommentForm onSubmit={onSubmit} />);
 
-      expect(screen.getByText('登录')).toBeInTheDocument();
-      // Verify the login link has correct href
-      const loginLink = screen.getByText('登录');
+      expect(screen.getByText('login')).toBeInTheDocument();
+      const loginLink = screen.getByText('login');
       expect(loginLink).toHaveAttribute('href', '/login');
     });
 
@@ -50,7 +49,7 @@ describe('CommentForm', () => {
       render(<CommentForm onSubmit={onSubmit} />);
 
       expect(screen.getByRole('textbox')).toBeInTheDocument();
-      expect(screen.getByText('发布评论')).toBeInTheDocument();
+      expect(screen.getByText('Post Comment')).toBeInTheDocument();
     });
   });
 
@@ -62,14 +61,13 @@ describe('CommentForm', () => {
       render(<CommentForm onSubmit={onSubmit} />);
 
       const textarea = screen.getByRole('textbox');
-      // Use fireEvent to change the value (React controlled component)
       const { fireEvent } = require('@testing-library/react');
-      fireEvent.change(textarea, { target: { value: '这是一条评论内容' } });
+      fireEvent.change(textarea, { target: { value: 'This is a comment' } });
 
-      screen.getByText('发布评论').click();
+      screen.getByText('Post Comment').click();
 
       await waitFor(() => {
-        expect(onSubmit).toHaveBeenCalledWith('这是一条评论内容');
+        expect(onSubmit).toHaveBeenCalledWith('This is a comment');
       });
     });
 
@@ -78,7 +76,7 @@ describe('CommentForm', () => {
 
       render(<CommentForm onSubmit={onSubmit} />);
 
-      expect(screen.getByText('发布评论')).toBeDisabled();
+      expect(screen.getByText('Post Comment')).toBeDisabled();
     });
 
     it('should NOT submit whitespace-only content', () => {
@@ -90,7 +88,7 @@ describe('CommentForm', () => {
       const { fireEvent } = require('@testing-library/react');
       fireEvent.change(textarea, { target: { value: '   ' } });
 
-      expect(screen.getByText('发布评论')).toBeDisabled();
+      expect(screen.getByText('Post Comment')).toBeDisabled();
     });
 
     it('should disable submit button when isSubmitting is true', () => {
@@ -98,7 +96,7 @@ describe('CommentForm', () => {
 
       render(<CommentForm onSubmit={onSubmit} isSubmitting={true} />);
 
-      expect(screen.getByText('发布中...')).toBeDisabled();
+      expect(screen.getByText('Posting...')).toBeDisabled();
     });
 
     it('should clear textarea after successful submission', async () => {
@@ -109,9 +107,9 @@ describe('CommentForm', () => {
 
       const textarea = screen.getByRole('textbox');
       const { fireEvent } = require('@testing-library/react');
-      fireEvent.change(textarea, { target: { value: '评论内容' } });
+      fireEvent.change(textarea, { target: { value: 'Comment content' } });
 
-      screen.getByText('发布评论').click();
+      screen.getByText('Post Comment').click();
 
       await waitFor(() => {
         expect(screen.getByRole('textbox')).toHaveValue('');
@@ -126,12 +124,12 @@ describe('CommentForm', () => {
 
       const textarea = screen.getByRole('textbox');
       const { fireEvent } = require('@testing-library/react');
-      fireEvent.change(textarea, { target: { value: '评论内容' } });
+      fireEvent.change(textarea, { target: { value: 'Comment content' } });
 
-      screen.getByText('发布评论').click();
+      screen.getByText('Post Comment').click();
 
       await waitFor(() => {
-        expect(screen.getByRole('textbox')).toHaveValue('评论内容');
+        expect(screen.getByRole('textbox')).toHaveValue('Comment content');
       });
     });
   });

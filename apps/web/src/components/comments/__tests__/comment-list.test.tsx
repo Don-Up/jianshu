@@ -1,96 +1,73 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CommentList } from '../comment-list';
-import type { Comment } from '@jianshu/shared';
+import type { CommentNode } from '@/types';
 
 // Mock CommentItem at top level
 vi.mock('../comment-item', () => ({
-  CommentItem: ({ comment, onDelete }: { comment: Comment; onDelete: (id: string) => Promise<boolean> }) => (
+  CommentItem: ({ comment, onDelete, onLike }: { comment: CommentNode; onDelete: (id: string) => void; onLike: (id: string, isLiked: boolean) => void }) => (
     <div data-testid="comment-item">
       <span data-testid="comment-content">{comment.content}</span>
       <button onClick={() => onDelete(comment.id)}>Delete</button>
+      <button onClick={() => onLike(comment.id, comment.isLiked)}>Like</button>
     </div>
   ),
 }));
 
-const mockComment: Comment = {
+const mockComment: CommentNode = {
   id: 'comment-1',
-  content: '这是一条测试评论',
-  createdAt: new Date('2024-01-01'),
+  content: 'This is a test comment',
+  createdAt: '2024-01-01T00:00:00Z',
+  authorId: 'user-1',
   author: {
     id: 'user-1',
     username: 'testuser',
     name: 'Test User',
     avatar: null,
   },
+  likeCount: 5,
+  isLiked: false,
+  parentId: null,
+  replies: [],
 };
 
-const mockComment2: Comment = {
+const mockComment2: CommentNode = {
   id: 'comment-2',
-  content: '这是第二条评论',
-  createdAt: new Date('2024-01-02'),
+  content: 'This is second comment',
+  createdAt: '2024-01-02T00:00:00Z',
+  authorId: 'user-2',
   author: {
     id: 'user-2',
     username: 'anotheruser',
     name: 'Another User',
     avatar: null,
   },
+  likeCount: 3,
+  isLiked: true,
+  parentId: null,
+  replies: [],
 };
 
 describe('CommentList', () => {
+  const mockOnDelete = vi.fn();
+  const mockOnLike = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('empty states', () => {
     it('should show empty message when comments is empty and not loading', () => {
       render(
         <CommentList
           comments={[]}
-          hasMore={false}
           isLoading={false}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
+          onDelete={mockOnDelete}
+          onLike={mockOnLike}
         />
       );
 
-      expect(screen.getByText('暂无评论，快来发表第一条评论吧')).toBeInTheDocument();
-    });
-
-    it('should NOT show empty message when comments is empty but is loading', () => {
-      render(
-        <CommentList
-          comments={[]}
-          hasMore={false}
-          isLoading={true}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
-        />
-      );
-
-      expect(screen.queryByText('暂无评论，快来发表第一条评论吧')).not.toBeInTheDocument();
-    });
-
-    it('should show empty message after loading completes with no comments', () => {
-      const { rerender } = render(
-        <CommentList
-          comments={[]}
-          hasMore={false}
-          isLoading={true}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
-        />
-      );
-
-      expect(screen.queryByText('暂无评论，快来发表第一条评论吧')).not.toBeInTheDocument();
-
-      rerender(
-        <CommentList
-          comments={[]}
-          hasMore={false}
-          isLoading={false}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
-        />
-      );
-
-      expect(screen.getByText('暂无评论，快来发表第一条评论吧')).toBeInTheDocument();
+      expect(screen.getByText('No comments yet. Be the first to comment!')).toBeInTheDocument();
     });
   });
 
@@ -99,10 +76,9 @@ describe('CommentList', () => {
       render(
         <CommentList
           comments={[mockComment, mockComment2]}
-          hasMore={false}
           isLoading={false}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
+          onDelete={mockOnDelete}
+          onLike={mockOnLike}
         />
       );
 
@@ -113,91 +89,13 @@ describe('CommentList', () => {
       render(
         <CommentList
           comments={[mockComment]}
-          hasMore={false}
           isLoading={false}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
+          onDelete={mockOnDelete}
+          onLike={mockOnLike}
         />
       );
 
-      expect(screen.getByText('这是一条测试评论')).toBeInTheDocument();
-    });
-  });
-
-  describe('load more button', () => {
-    it('should NOT show load more button when hasMore is false', () => {
-      render(
-        <CommentList
-          comments={[mockComment]}
-          hasMore={false}
-          isLoading={false}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
-        />
-      );
-
-      expect(screen.queryByText('加载更多')).not.toBeInTheDocument();
-      expect(screen.queryByText('加载中...')).not.toBeInTheDocument();
-    });
-
-    it('should show load more button when hasMore is true', () => {
-      render(
-        <CommentList
-          comments={[mockComment]}
-          hasMore={true}
-          isLoading={false}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
-        />
-      );
-
-      expect(screen.getByText('加载更多')).toBeInTheDocument();
-    });
-
-    it('should show loading text when isLoading and hasMore', () => {
-      render(
-        <CommentList
-          comments={[mockComment]}
-          hasMore={true}
-          isLoading={true}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
-        />
-      );
-
-      expect(screen.getByText('加载中...')).toBeInTheDocument();
-    });
-
-    it('should call onLoadMore when load more button is clicked', async () => {
-      const onLoadMore = vi.fn();
-
-      render(
-        <CommentList
-          comments={[mockComment]}
-          hasMore={true}
-          isLoading={false}
-          onDelete={vi.fn()}
-          onLoadMore={onLoadMore}
-        />
-      );
-
-      screen.getByText('加载更多').click();
-
-      expect(onLoadMore).toHaveBeenCalled();
-    });
-
-    it('should disable load more button when isLoading', () => {
-      render(
-        <CommentList
-          comments={[mockComment]}
-          hasMore={true}
-          isLoading={true}
-          onDelete={vi.fn()}
-          onLoadMore={vi.fn()}
-        />
-      );
-
-      expect(screen.getByText('加载中...')).toBeInTheDocument();
+      expect(screen.getByText('This is a test comment')).toBeInTheDocument();
     });
   });
 });
