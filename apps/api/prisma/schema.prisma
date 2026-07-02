@@ -58,10 +58,27 @@ model Article {
   bookmarks    Bookmark[]
   collectionItems CollectionItem[]
   notifications Notification[]
+  versions     ArticleVersion[]
 
   @@index([authorId])
   @@index([slug])
   @@map("articles")
+}
+
+model ArticleVersion {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  excerpt   String?
+  version   Int
+  createdAt DateTime @default(now())
+
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([articleId, version])
+  @@map("article_versions")
 }
 
 model Tag {

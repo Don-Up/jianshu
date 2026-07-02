@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nest
 import { PrismaService } from '../prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { VersionsService } from '../versions/versions.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { QueryArticleDto } from './dto/query-article.dto';
@@ -14,6 +15,7 @@ export class ArticlesService {
     private prisma: PrismaService,
     private redis: RedisService,
     private notificationsService: NotificationsService,
+    private versionsService: VersionsService,
   ) {}
 
   private generateSlug(title: string): string {
@@ -210,6 +212,14 @@ export class ArticlesService {
     if (article.authorId !== userId) {
       throw new ForbiddenException('Not authorized to update this article');
     }
+
+    // Save current version before updating
+    const versionNumber = (await this.versionsService.getLatestVersionNumber(article.id)) + 1;
+    await this.versionsService.saveVersion(article.id, {
+      title: article.title,
+      content: article.content,
+      excerpt: article.excerpt,
+    }, versionNumber);
 
     let tags: any = undefined;
     if (dto.tags !== undefined) {

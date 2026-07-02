@@ -11,6 +11,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { UploadModule } from './upload/upload.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { CollectionsModule } from './collections/collections.module';
+import { VersionsModule } from './versions/versions.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CollectionsModule } from './collections/collections.module';
     UploadModule,
     GatewayModule,
     CollectionsModule,
+    VersionsModule,
   ],
   providers: [
     {
