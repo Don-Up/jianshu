@@ -203,6 +203,12 @@ describe('CommentItem', () => {
   });
 
   describe('reply functionality', () => {
+    const mockOnReply = vi.fn();
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
     it('should show reply button', () => {
       mockUseAuth.mockReturnValue({ user: mockOtherUser, isLoading: false, isAuthenticated: true });
 
