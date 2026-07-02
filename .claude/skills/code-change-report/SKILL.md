@@ -7,15 +7,15 @@ Use English as the default language.
 
 ### 第一部分: 概述
 
-简要描述此次开发和改动的内容(200字以内)。
+简要描述此次开发和改动的内容(300字以内)。
 
 ### 第二部分: 改动文件清单
 
 1. 文件结构: 提供项目文件树，在修改和新增的文件名后面添加(修改)和(新增)标识，方便开发者快速了解改动范围，对于文件树中未改动的叶子节点可以省略。
-2. 新增文件: 表格，第一列是文件路径，第二列是功能类别，第三列是说明。
+2. 新增文件: 表格，第一列是文件路径，第二列是功能类别，第三列是说明，文件路径的文件名部分使用``包裹，父级目录使用****包裹，例如apps/api/src/**collections**/`collections.module.ts`。
 3. 修改文件: 表格，第一列是文件路径，第二列是功能类别，第三列是改动说明。
 4. mermaid类图: 包含了新增文件和修改文件的类图，帮助开发者快速了解代码结构和类之间的关系。
-5. API Reference: 列出新增或修改的API以及其它与功能实现相关的API，并给出API的详细说明。包含三列: Property / Method,	Description,	Example。例如, 属性: `id`: **string**	| Unique comment identifier	| "comment-abc123" |, 方法: `onDelete`(commentId: string): **void**	| Pass delete callback to CommentItem | onDelete("c1") |
+5. API Reference: 分别为类图中的类列出新增或修改的API以及其它与功能实现相关的API，以类名为标题，并给出API的详细说明。包含三列: Property / Method,	Description,	Example。例如, 属性: `id`: **string**	| Unique comment identifier	| "comment-abc123" |, 方法: `onDelete`(commentId: string): **void**	| Pass delete callback to CommentItem | onDelete("c1") |
 
 #### 
 

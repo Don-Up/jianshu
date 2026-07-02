@@ -10,6 +10,7 @@ import { CommentsModule } from './comments/comments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { UploadModule } from './upload/upload.module';
 import { GatewayModule } from './gateway/gateway.module';
+import { CollectionsModule } from './collections/collections.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { GatewayModule } from './gateway/gateway.module';
     NotificationsModule,
     UploadModule,
     GatewayModule,
+    CollectionsModule,
   ],
   providers: [
     {
