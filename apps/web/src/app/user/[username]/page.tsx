@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ProfileHeader } from '@/components/user/profile-header';
 import { ProfileHeaderSkeleton, ArticleListSkeleton } from '@/components/loading/skeleton';
 import { ArticleList } from '@/components/article/article-list';
+import { CollectionList } from '@/components/collections/collection-list';
 import { useAuth } from '@/hooks/use-auth';
+import { useCollections } from '@/hooks/use-collections';
 import { userApi } from '@/lib/api';
 import type { ArticleWithAuthor } from '@/types';
 import type { User } from '@jianshu/shared';
@@ -15,11 +18,13 @@ export default function UserProfilePage() {
   const params = useParams();
   const username = params.username as string;
   const { user: currentUser } = useAuth();
+  const { collections, isLoading: isCollectionsLoading } = useCollections();
 
   const [profile, setProfile] = useState<User | null>(null);
   const [articles, setArticles] = useState<ArticleWithAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'articles' | 'collections'>('articles');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,8 +85,42 @@ export default function UserProfilePage() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex gap-8">
           <main className="flex-1">
-            <h2 className="text-lg font-semibold text-foreground mb-4">文章</h2>
-            <ArticleList articles={articles} />
+            {/* Tab Navigation */}
+            <div className="flex gap-4 border-b mb-6">
+              <button
+                onClick={() => setActiveTab('articles')}
+                className={`pb-3 px-1 text-sm font-medium transition-colors ${
+                  activeTab === 'articles'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                文章
+              </button>
+              {isOwnProfile && (
+                <button
+                  onClick={() => setActiveTab('collections')}
+                  className={`pb-3 px-1 text-sm font-medium transition-colors ${
+                    activeTab === 'collections'
+                      ? 'text-primary border-b-2 border-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  收藏集
+                </button>
+              )}
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'articles' ? (
+              <ArticleList articles={articles} />
+            ) : (
+              <CollectionList
+                collections={currentUser ? collections : []}
+                isOwner={isOwnProfile}
+                isLoading={isCollectionsLoading}
+              />
+            )}
           </main>
 
           <aside className="hidden md:block w-64">

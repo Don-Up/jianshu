@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useCollections } from '@/hooks/use-collections';
+import { useAuth } from '@/hooks/use-auth';
 import type { Collection } from '@/lib/api';
 
 interface AddToCollectionModalProps {
@@ -15,6 +17,7 @@ interface AddToCollectionModalProps {
 
 export function AddToCollectionModal({ open, onOpenChange, articleSlug }: AddToCollectionModalProps) {
   const { collections, isLoading, addArticle, isAddingArticle } = useCollections();
+  const { user } = useAuth();
   const [addedTo, setAddedTo] = useState<Set<string>>(new Set());
 
   const handleAddToCollection = (collectionId: string) => {
@@ -44,7 +47,13 @@ export function AddToCollectionModal({ open, onOpenChange, articleSlug }: AddToC
             </div>
           ) : collections.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
-              还没有收藏集，<a href="/user/collections" className="text-primary hover:underline">去创建</a>
+              还没有收藏集，{user ? (
+                <Link href={`/user/${user.username}/collections`} className="text-primary hover:underline">
+                  去创建
+                </Link>
+              ) : (
+                <span>去创建</span>
+              )}
             </p>
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">

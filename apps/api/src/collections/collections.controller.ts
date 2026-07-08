@@ -17,7 +17,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 
 @ApiTags('collections')
-@Controller({ version: '1' })
+@Controller({ path: 'collections', version: '1' })
 export class CollectionsController {
   constructor(private collectionsService: CollectionsService) {}
 

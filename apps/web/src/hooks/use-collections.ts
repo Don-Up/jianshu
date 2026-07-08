@@ -9,7 +9,16 @@ export function useCollections() {
 
   const query = useQuery({
     queryKey: queryKeys.collections,
-    queryFn: () => collectionsApi.list(),
+    queryFn: async () => {
+      try {
+        return await collectionsApi.list();
+      } catch {
+        // Return empty on error to prevent stuck loading state
+        return { success: true, data: [] };
+      }
+    },
+    staleTime: 30000,
+    retry: 1,
   });
 
   const createMutation = useMutation({

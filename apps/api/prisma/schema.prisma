@@ -59,6 +59,7 @@ model Article {
   collectionItems CollectionItem[]
   notifications Notification[]
   versions     ArticleVersion[]
+  shares       Share[]
 
   @@index([authorId])
   @@index([slug])
@@ -79,6 +80,19 @@ model ArticleVersion {
   @@index([articleId])
   @@index([articleId, version])
   @@map("article_versions")
+}
+
+model Share {
+  id        String   @id @default(cuid())
+  platform  String   // twitter, facebook, wechat, link, etc.
+  createdAt DateTime @default(now())
+
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([articleId, platform])
+  @@map("shares")
 }
 
 model Tag {

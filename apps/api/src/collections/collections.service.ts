@@ -23,7 +23,10 @@ export class CollectionsService {
     };
   }
 
-  async findAll(userId: string) {
+  async findAll(userId?: string) {
+    if (!userId) {
+      return { success: true, data: [] };
+    }
     const collections = await this.prisma.collection.findMany({
       where: { userId },
       include: {

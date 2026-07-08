@@ -12,6 +12,7 @@ import { UploadModule } from './upload/upload.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { CollectionsModule } from './collections/collections.module';
 import { VersionsModule } from './versions/versions.module';
+import { ShareModule } from './share/share.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { VersionsModule } from './versions/versions.module';
     GatewayModule,
     CollectionsModule,
     VersionsModule,
+    ShareModule,
   ],
   providers: [
     {
