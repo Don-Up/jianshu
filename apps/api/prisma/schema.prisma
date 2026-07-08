@@ -30,6 +30,7 @@ model User {
 
   notifications Notification[] @relation("NotificationUser")
   actorNotifications Notification[] @relation("NotificationActor")
+  notificationPreferences NotificationPreference?
   refreshTokens RefreshToken[]
 
   @@map("users")
@@ -255,4 +256,19 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  comment   Boolean  @default(true)
+  like      Boolean  @default(true)
+  follow    Boolean  @default(true)
+  system    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }

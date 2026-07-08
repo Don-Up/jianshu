@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Query, UseGuards, Body } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { QueryNotificationDto } from './dto/query-notification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -19,10 +19,31 @@ export class NotificationsController {
     return this.notificationsService.findAll(user.id, query);
   }
 
+  @Get('grouped')
+  @ApiOperation({ summary: 'Get grouped notifications by date' })
+  async getGroupedNotifications(@CurrentUser() user: User) {
+    return this.notificationsService.getGroupedNotifications(user.id);
+  }
+
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notification count' })
   async getUnreadCount(@CurrentUser() user: User) {
     return this.notificationsService.getUnreadCount(user.id);
+  }
+
+  @Get('preferences')
+  @ApiOperation({ summary: 'Get notification preferences' })
+  async getPreferences(@CurrentUser() user: User) {
+    return this.notificationsService.getPreferences(user.id);
+  }
+
+  @Put('preferences')
+  @ApiOperation({ summary: 'Update notification preferences' })
+  async updatePreferences(
+    @CurrentUser() user: User,
+    @Body() body: { comment?: boolean; like?: boolean; follow?: boolean; system?: boolean },
+  ) {
+    return this.notificationsService.updatePreferences(user.id, body);
   }
 
   @Post(':id/read')

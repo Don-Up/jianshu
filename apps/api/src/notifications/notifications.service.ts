@@ -85,6 +85,15 @@ export class NotificationsService {
       return { success: true };
     }
 
+    // Check user notification preferences
+    const preferences = await this.prisma.notificationPreference.findUnique({
+      where: { userId },
+    });
+
+    if (preferences && !preferences[type.toLowerCase() as keyof Omit<typeof preferences, 'id' | 'userId' | 'createdAt' | 'updatedAt'>]) {
+      return { success: true, data: { skipped: true } };
+    }
+
     const notification = await this.prisma.notification.create({
       data: {
         userId,
@@ -100,5 +109,93 @@ export class NotificationsService {
     this.notificationsGateway.notifyUser(userId, notification);
 
     return { success: true };
+  }
+
+  async getPreferences(userId: string) {
+    let preferences = await this.prisma.notificationPreference.findUnique({
+      where: { userId },
+    });
+
+    if (!preferences) {
+      preferences = await this.prisma.notificationPreference.create({
+        data: {
+          userId,
+          comment: true,
+          like: true,
+          follow: true,
+          system: true,
+        },
+      });
+    }
+
+    return { success: true, data: preferences };
+  }
+
+  async updatePreferences(
+    userId: string,
+    data: { comment?: boolean; like?: boolean; follow?: boolean; system?: boolean },
+  ) {
+    let preferences = await this.prisma.notificationPreference.findUnique({
+      where: { userId },
+    });
+
+    if (!preferences) {
+      preferences = await this.prisma.notificationPreference.create({
+        data: {
+          userId,
+          comment: data.comment ?? true,
+          like: data.like ?? true,
+          follow: data.follow ?? true,
+          system: data.system ?? true,
+        },
+      });
+    } else {
+      preferences = await this.prisma.notificationPreference.update({
+        where: { userId },
+        data,
+      });
+    }
+
+    return { success: true, data: preferences };
+  }
+
+  async getGroupedNotifications(userId: string) {
+    const notifications = await this.prisma.notification.findMany({
+      where: { userId },
+      include: {
+        actor: {
+          select: { id: true, username: true, name: true, avatar: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Group by date (today, yesterday, this week, older)
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const groups = {
+      today: [] as typeof notifications,
+      yesterday: [] as typeof notifications,
+      thisWeek: [] as typeof notifications,
+      older: [] as typeof notifications,
+    };
+
+    for (const n of notifications) {
+      const createdAt = new Date(n.createdAt);
+      if (createdAt >= today) {
+        groups.today.push(n);
+      } else if (createdAt >= yesterday) {
+        groups.yesterday.push(n);
+      } else if (createdAt >= weekAgo) {
+        groups.thisWeek.push(n);
+      } else {
+        groups.older.push(n);
+      }
+    }
+
+    return { success: true, data: groups };
   }
 }

@@ -43,6 +43,11 @@ describe('NotificationsService', () => {
               updateMany: jest.fn(),
               create: jest.fn(),
             },
+            notificationPreference: {
+              findUnique: jest.fn(),
+              create: jest.fn(),
+              update: jest.fn(),
+            },
           },
         },
         {
@@ -168,6 +173,127 @@ describe('NotificationsService', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.count).toBe(0);
+    });
+  });
+
+  describe('getPreferences', () => {
+    const mockPreference = {
+      id: 'pref-123',
+      userId: 'user-123',
+      comment: true,
+      like: true,
+      follow: false,
+      system: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should return existing preferences', async () => {
+      prismaService.notificationPreference.findUnique = jest.fn().mockResolvedValue(mockPreference);
+
+      const result = await notificationsService.getPreferences('user-123');
+
+      expect(result.success).toBe(true);
+      expect(result.data.comment).toBe(true);
+      expect(result.data.follow).toBe(false);
+    });
+
+    it('should create default preferences if not exists', async () => {
+      prismaService.notificationPreference.findUnique = jest.fn().mockResolvedValue(null);
+      prismaService.notificationPreference.create = jest.fn().mockResolvedValue({
+        ...mockPreference,
+        comment: true,
+        like: true,
+        follow: true,
+        system: true,
+      });
+
+      const result = await notificationsService.getPreferences('user-123');
+
+      expect(result.success).toBe(true);
+      expect(prismaService.notificationPreference.create).toHaveBeenCalledWith({
+        data: {
+          userId: 'user-123',
+          comment: true,
+          like: true,
+          follow: true,
+          system: true,
+        },
+      });
+    });
+  });
+
+  describe('updatePreferences', () => {
+    const mockPreference = {
+      id: 'pref-123',
+      userId: 'user-123',
+      comment: false,
+      like: true,
+      follow: true,
+      system: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should update existing preferences', async () => {
+      prismaService.notificationPreference.findUnique = jest.fn().mockResolvedValue(mockPreference);
+      prismaService.notificationPreference.update = jest.fn().mockResolvedValue({
+        ...mockPreference,
+        comment: false,
+      });
+
+      const result = await notificationsService.updatePreferences('user-123', { comment: false });
+
+      expect(result.success).toBe(true);
+      expect(result.data.comment).toBe(false);
+    });
+
+    it('should create preferences if not exists', async () => {
+      prismaService.notificationPreference.findUnique = jest.fn().mockResolvedValue(null);
+      prismaService.notificationPreference.create = jest.fn().mockResolvedValue(mockPreference);
+
+      const result = await notificationsService.updatePreferences('user-123', { comment: false });
+
+      expect(result.success).toBe(true);
+      expect(prismaService.notificationPreference.create).toHaveBeenCalled();
+    });
+  });
+
+  describe('getGroupedNotifications', () => {
+    it('should group notifications by date', async () => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+      const mockNotifications = [
+        { ...mockNotification, createdAt: now },
+        { ...mockNotification, id: '2', createdAt: yesterday },
+        { ...mockNotification, id: '3', createdAt: twoWeeksAgo },
+      ];
+
+      prismaService.notification.findMany = jest.fn().mockResolvedValue(mockNotifications);
+
+      const result = await notificationsService.getGroupedNotifications('user-123');
+
+      expect(result.success).toBe(true);
+      expect(result.data.today).toHaveLength(1);
+      expect(result.data.yesterday).toHaveLength(1);
+      expect(result.data.thisWeek).toHaveLength(0);
+      expect(result.data.older).toHaveLength(1);
+    });
+
+    it('should return empty groups when no notifications', async () => {
+      prismaService.notification.findMany = jest.fn().mockResolvedValue([]);
+
+      const result = await notificationsService.getGroupedNotifications('user-123');
+
+      expect(result.success).toBe(true);
+      expect(result.data.today).toHaveLength(0);
+      expect(result.data.yesterday).toHaveLength(0);
+      expect(result.data.thisWeek).toHaveLength(0);
+      expect(result.data.older).toHaveLength(0);
     });
   });
 });
