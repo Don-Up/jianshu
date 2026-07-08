@@ -14,6 +14,7 @@ import { CollectionsModule } from './collections/collections.module';
 import { VersionsModule } from './versions/versions.module';
 import { ShareModule } from './share/share.module';
 import { FollowModule } from './follow/follow.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { FollowModule } from './follow/follow.module';
     VersionsModule,
     ShareModule,
     FollowModule,
+    AnalyticsModule,
   ],
   providers: [
     {
