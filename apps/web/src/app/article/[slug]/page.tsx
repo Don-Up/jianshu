@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ArticleContent } from '@/components/article/article-content';
+import { ShareButton } from '@/components/article/share-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArticleEditorSkeleton } from '@/components/loading/skeleton';
@@ -68,6 +69,7 @@ export default function ArticlePage() {
           onEdit={() => router.push(`/write?slug=${slug}`)}
           headerActions={
             <>
+              <ShareButton slug={article.slug} title={article.title} />
               {user && (
                 <Button
                   variant="outline"
