@@ -18,4 +18,12 @@ export const queryKeys = {
 
   // Comments
   comments: (slug: string) => ['comments', slug] as const,
+
+  // Collections
+  collections: ['collections'] as const,
+  collection: (id: string) => [...queryKeys.collections, id] as const,
+  bookmarks: ['collections', 'bookmarks'] as const,
+
+  // Versions
+  versions: (slug: string) => ['versions', slug] as const,
 };

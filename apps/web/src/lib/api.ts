@@ -137,6 +137,28 @@ export const articleApi = {
     }),
 };
 
+export interface ArticleVersion {
+  id: string;
+  title: string;
+  content: string;
+  excerpt: string | null;
+  version: number;
+  createdAt: string;
+}
+
+export const versionsApi = {
+  list: (slug: string) =>
+    fetchApi<ArticleVersion[]>(`/api/v1/articles/${slug}/versions`),
+
+  get: (slug: string, versionId: string) =>
+    fetchApi<ArticleVersion>(`/api/v1/articles/${slug}/versions/${versionId}`),
+
+  restore: (slug: string, versionId: string) =>
+    fetchApi<void>(`/api/v1/articles/${slug}/versions/${versionId}/restore`, {
+      method: 'POST',
+    }),
+};
+
 export const userApi = {
   getByUsername: (username: string) =>
     fetchApi<User>(`/api/v1/users/${username}`),
@@ -222,4 +244,61 @@ export const notificationApi = {
 
   markAllAsRead: () =>
     fetchApi<void>('/api/v1/notifications/read-all', { method: 'POST' }),
+};
+
+export interface CollectionItem {
+  id: string;
+  title: string;
+  slug: string;
+  coverImage: string | null;
+}
+
+export interface Collection {
+  id: string;
+  name: string;
+  description: string | null;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  articleCount: number;
+  previewItems: CollectionItem[];
+}
+
+export const collectionsApi = {
+  list: () => fetchApi<Collection[]>('/api/v1/collections'),
+
+  getById: (id: string) => fetchApi<Collection>(`/api/v1/collections/${id}`),
+
+  create: (data: { name: string; description?: string; isPublic?: boolean }) =>
+    fetchApi<Collection>('/api/v1/collections', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  update: (id: string, data: { name?: string; description?: string; isPublic?: boolean }) =>
+    fetchApi<Collection>(`/api/v1/collections/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: string) =>
+    fetchApi<void>(`/api/v1/collections/${id}`, { method: 'DELETE' }),
+
+  addArticle: (collectionId: string, slug: string) =>
+    fetchApi<void>(`/api/v1/collections/${collectionId}/articles/${slug}`, {
+      method: 'POST',
+    }),
+
+  removeArticle: (collectionId: string, articleId: string) =>
+    fetchApi<void>(`/api/v1/collections/${collectionId}/articles/${articleId}`, {
+      method: 'DELETE',
+    }),
+
+  toggleBookmark: (slug: string) =>
+    fetchApi<{ bookmarked: boolean }>(`/api/v1/collections/bookmark/${slug}`, {
+      method: 'POST',
+    }),
+
+  getBookmarks: () => fetchApi<CollectionItem[]>('/api/v1/collections/bookmarks'),
 };

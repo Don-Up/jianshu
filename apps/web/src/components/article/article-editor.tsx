@@ -10,6 +10,8 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { TiptapEditor } from '@/components/tiptap/tiptap-editor';
 import { articleApi } from '@/lib/api';
 import { useDraft } from '@/hooks/use-draft';
+import { queryKeys } from '@/lib/query-keys';
+import { useQueryClient } from '@tanstack/react-query';
 import type { CreateArticleRequest } from '@jianshu/shared';
 
 interface ArticleEditorProps {
@@ -22,6 +24,7 @@ const DRAFT_KEY_PREFIX = 'article-draft-';
 
 export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const draftKey = slug ? `${DRAFT_KEY_PREFIX}${slug}` : `${DRAFT_KEY_PREFIX}new`;
   const { saveDraft, loadDraft, clearDraft, hasDraft } = useDraft(draftKey);
 
@@ -127,6 +130,10 @@ export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorPro
       if (result.success && result.data) {
         // Clear draft on successful publish
         clearDraft();
+        // Invalidate article cache to ensure fresh data on next view
+        if (slug) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.article(slug) });
+        }
         toast.success(publish ? '发布成功' : '草稿保存成功');
         router.push(`/article/${result.data.slug}`);
       } else {
