@@ -13,6 +13,7 @@ import { GatewayModule } from './gateway/gateway.module';
 import { CollectionsModule } from './collections/collections.module';
 import { VersionsModule } from './versions/versions.module';
 import { ShareModule } from './share/share.module';
+import { FollowModule } from './follow/follow.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ShareModule } from './share/share.module';
     CollectionsModule,
     VersionsModule,
     ShareModule,
+    FollowModule,
   ],
   providers: [
     {
