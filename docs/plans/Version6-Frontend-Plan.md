@@ -26,19 +26,27 @@ V5 Frontend completed Collections/Favorites UI, Article Version History UI, and 
 
 ### Files
 
-- `apps/web/src/components/user/` (modify)
-  - `follow-button.tsx` (new)
-  - `user-stats.tsx` (new)
-- `apps/web/src/app/user/[username]/page.tsx` (modify)
-- `apps/web/src/hooks/use-follow.ts` (new)
+- `apps/web/src/hooks/use-follow.ts` (new) - Extract follow logic from ProfileHeader
+- `apps/web/src/components/user/user-stats.tsx` (new) - Extract stats display component
+- `apps/web/src/components/user/profile-header.tsx` (modify) - Use new hook and UserStats
+- `apps/web/src/app/user/[username]/page.tsx` (modify) - Add followers/following tabs
+
+### Status
+
+- ✅ Follow button with optimistic update - Already implemented in `ProfileHeader`
+- ✅ Stats display in profile header - Already implemented inline
+- ❌ `use-follow.ts` hook - Not extracted, logic is inline
+- ❌ `user-stats.tsx` component - Not extracted, markup is inline
+- ❌ Followers/Following tabs - Not implemented
 
 ### Steps
 
-1. Create useFollow hook
-2. Create FollowButton component
-3. Create UserStats component showing follower/following counts
-4. Add Follow button to user profile header
-5. Add stats to profile header
+1. Create `useFollow` hook extracting follow/unfollow logic from ProfileHeader
+2. Create `UserStats` component for follower/following/article counts display
+3. Refactor `ProfileHeader` to use new hook and UserStats component
+4. Add Followers tab to user profile page
+5. Add Following tab to user profile page
+6. Create FollowersList and FollowingList components
 
 ---
 
@@ -112,14 +120,14 @@ apps/web/src/
 │   ├── article/
 │   │   └── share-button.tsx     # New
 │   ├── user/
-│   │   ├── follow-button.tsx     # New
-│   │   ├── user-stats.tsx        # New
-│   │   └── profile-tabs.tsx      # New
+│   │   ├── user-stats.tsx        # New (extract from ProfileHeader)
+│   │   ├── profile-tabs.tsx      # New
+│   │   └── profile-header.tsx    # Modify: use useFollow hook
 │   └── notifications/
 │       ├── notification-list.tsx  # Modify
 │       └── notification-item.tsx  # Modify
 ├── hooks/
-│   └── use-follow.ts             # New
+│   └── use-follow.ts             # New (extract from ProfileHeader)
 └── lib/
     └── query-keys.ts              # Modify: add follow keys
 ```

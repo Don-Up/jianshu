@@ -1,12 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { userApi } from '@/lib/api';
-import { queryKeys } from '@/lib/query-keys';
+import { UserStats } from './user-stats';
+import { useFollow } from '@/hooks/use-follow';
 import type { User } from '@jianshu/shared';
 
 interface ProfileHeaderProps {
@@ -16,29 +13,11 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user, isOwnProfile, initialIsFollowing }: ProfileHeaderProps) {
-  const [optimisticIsFollowing, setOptimisticIsFollowing] = useState(initialIsFollowing || false);
-  const queryClient = useQueryClient();
-
-  const followMutation = useMutation({
-    mutationFn: () => userApi.follow(user.id),
-    onMutate: async () => {
-      // Optimistic update: immediately update UI
-      setOptimisticIsFollowing(!optimisticIsFollowing);
-    },
-    onSuccess: (res) => {
-      if (res.success && res.data) {
-        setOptimisticIsFollowing(res.data.isFollowing);
-        // Invalidate user profile cache
-        queryClient.invalidateQueries({ queryKey: queryKeys.user(user.username) });
-        toast.success(res.data.isFollowing ? '关注成功' : '已取消关注');
-      }
-    },
-    onError: () => {
-      // Rollback on error
-      setOptimisticIsFollowing(!optimisticIsFollowing);
-      toast.error('操作失败，请重试');
-    },
-  });
+  const { isFollowing, isPending, toggleFollow } = useFollow(
+    user.id,
+    user.username,
+    initialIsFollowing
+  );
 
   return (
     <div className="bg-background border-b">
@@ -58,31 +37,26 @@ export function ProfileHeader({ user, isOwnProfile, initialIsFollowing }: Profil
               {user.bio && <p className="text-muted-foreground">{user.bio}</p>}
             </div>
 
-            <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4">
-              <span>
-                <strong className="text-foreground">{user.followerCount || 0}</strong> 粉丝
-              </span>
-              <span>
-                <strong className="text-foreground">{user.followingCount || 0}</strong> 关注
-              </span>
-              <span>
-                <strong className="text-foreground">{user.articleCount || 0}</strong> 文章
-              </span>
-            </div>
+            <UserStats
+              followersCount={user.followerCount || 0}
+              followingCount={user.followingCount || 0}
+              articlesCount={user.articleCount || 0}
+            />
 
             {!isOwnProfile && (
               <Button
-                variant={optimisticIsFollowing ? 'secondary' : 'default'}
+                variant={isFollowing ? 'secondary' : 'default'}
                 size="sm"
-                onClick={() => followMutation.mutate()}
-                disabled={followMutation.isPending}
+                onClick={toggleFollow}
+                disabled={isPending}
+                className="mt-4"
               >
-                {followMutation.isPending ? '处理中...' : optimisticIsFollowing ? '已关注' : '关注'}
+                {isPending ? '处理中...' : isFollowing ? '已关注' : '关注'}
               </Button>
             )}
 
             {isOwnProfile && (
-              <Button variant="secondary" size="sm">编辑个人资料</Button>
+              <Button variant="secondary" size="sm" className="mt-4">编辑个人资料</Button>
             )}
           </div>
         </div>

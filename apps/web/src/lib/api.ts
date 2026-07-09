@@ -192,6 +192,32 @@ export const userApi = {
       `/api/v1/users/${username}/articles${searchParams ? `?${searchParams}` : ''}`
     );
   },
+
+  getFollowers: (username: string, params?: { page?: number; limit?: number }) => {
+    const searchParams = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : '';
+    return fetchApi<PaginatedResponse<User>>(
+      `/api/v1/users/${username}/followers${searchParams ? `?${searchParams}` : ''}`
+    );
+  },
+
+  getFollowing: (username: string, params?: { page?: number; limit?: number }) => {
+    const searchParams = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : '';
+    return fetchApi<PaginatedResponse<User>>(
+      `/api/v1/users/${username}/following${searchParams ? `?${searchParams}` : ''}`
+    );
+  },
 };
 
 export const commentApi = {

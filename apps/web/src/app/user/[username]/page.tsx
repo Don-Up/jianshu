@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ProfileHeader } from '@/components/user/profile-header';
+import { FollowList } from '@/components/user/follow-list';
 import { ProfileHeaderSkeleton, ArticleListSkeleton } from '@/components/loading/skeleton';
 import { ArticleList } from '@/components/article/article-list';
 import { CollectionList } from '@/components/collections/collection-list';
@@ -24,7 +25,7 @@ export default function UserProfilePage() {
   const [articles, setArticles] = useState<ArticleWithAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'articles' | 'collections'>('articles');
+  const [activeTab, setActiveTab] = useState<'articles' | 'collections' | 'followers' | 'following'>('articles');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,6 +89,7 @@ export default function UserProfilePage() {
             {/* Tab Navigation */}
             <div className="flex gap-4 border-b mb-6">
               <button
+                type="button"
                 onClick={() => setActiveTab('articles')}
                 className={`pb-3 px-1 text-sm font-medium transition-colors ${
                   activeTab === 'articles'
@@ -99,6 +101,7 @@ export default function UserProfilePage() {
               </button>
               {isOwnProfile && (
                 <button
+                  type="button"
                   onClick={() => setActiveTab('collections')}
                   className={`pb-3 px-1 text-sm font-medium transition-colors ${
                     activeTab === 'collections'
@@ -109,18 +112,44 @@ export default function UserProfilePage() {
                   收藏集
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setActiveTab('followers')}
+                className={`pb-3 px-1 text-sm font-medium transition-colors ${
+                  activeTab === 'followers'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                粉丝
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('following')}
+                className={`pb-3 px-1 text-sm font-medium transition-colors ${
+                  activeTab === 'following'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                关注
+              </button>
             </div>
 
             {/* Tab Content */}
             {activeTab === 'articles' ? (
               <ArticleList articles={articles} />
-            ) : (
+            ) : activeTab === 'collections' ? (
               <CollectionList
                 collections={currentUser ? collections : []}
                 isOwner={isOwnProfile}
                 isLoading={isCollectionsLoading}
               />
-            )}
+            ) : activeTab === 'followers' ? (
+              <FollowList username={profile.username} type="followers" />
+            ) : activeTab === 'following' ? (
+              <FollowList username={profile.username} type="following" />
+            ) : null}
           </main>
 
           <aside className="hidden md:block w-64">
