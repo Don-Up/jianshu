@@ -37,4 +37,7 @@ export const queryKeys = {
 
   // Drafts
   drafts: ['drafts'] as const,
+
+  // Settings
+  settings: ['settings'] as const,
 };

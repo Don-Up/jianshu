@@ -434,3 +434,44 @@ export const draftsApi = {
       method: 'POST',
     }),
 };
+
+export interface NotificationPreferences {
+  comment: boolean;
+  like: boolean;
+  follow: boolean;
+  system: boolean;
+}
+
+export interface UserSettings {
+  user: {
+    id: string;
+    email: string;
+    username: string;
+    name: string;
+    bio: string | null;
+    avatar: string | null;
+    createdAt: string;
+  };
+  notificationPreferences: NotificationPreferences;
+}
+
+export const settingsApi = {
+  getSettings: () => fetchApi<UserSettings>('/api/v1/users/me/settings'),
+
+  updateSettings: (data: { name?: string; bio?: string; avatar?: string }) =>
+    fetchApi<UserSettings['user']>('/api/v1/users/me/settings', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  updateNotificationPreferences: (data: Partial<NotificationPreferences>) =>
+    fetchApi<NotificationPreferences>('/api/v1/users/me/settings/notifications', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  deleteAccount: () =>
+    fetchApi<void>('/api/v1/users/me/account', {
+      method: 'DELETE',
+    }),
+};
