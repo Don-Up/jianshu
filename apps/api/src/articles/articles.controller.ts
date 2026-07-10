@@ -26,6 +26,7 @@ export class ArticlesController {
   @ApiQuery({ name: 'authorId', required: false, type: String })
   @ApiQuery({ name: 'tag', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'createdAfter', required: false, type: String })
   async findAll(
     @Query() query: QueryArticleDto,
     @CurrentUser() user?: JwtUser,

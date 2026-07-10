@@ -10,6 +10,14 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+};
+vi.stubGlobal('localStorage', localStorageMock);
+
 import { articleApi } from '@/lib/api';
 
 const mockArticle: ArticleWithAuthor = {
@@ -339,6 +347,125 @@ describe('useSearch hook', () => {
       // This test would need a more complex setup to test concurrent load prevention
       // For now we just verify the initial state
       expect(result.current.isLoading).toBe(false);
+    });
+  });
+
+  describe('filters', () => {
+    it('should have default sortBy as relevance', () => {
+      const { result } = renderHook(() => useSearch(''));
+      expect(result.current.sortBy).toBe('relevance');
+    });
+
+    it('should have default dateRange as all', () => {
+      const { result } = renderHook(() => useSearch(''));
+      expect(result.current.dateRange).toBe('all');
+    });
+
+    it('should update sortBy', () => {
+      const { result } = renderHook(() => useSearch(''));
+      act(() => {
+        result.current.setSortBy('date');
+      });
+      expect(result.current.sortBy).toBe('date');
+    });
+
+    it('should update dateRange', () => {
+      const { result } = renderHook(() => useSearch(''));
+      act(() => {
+        result.current.setDateRange('month');
+      });
+      expect(result.current.dateRange).toBe('month');
+    });
+  });
+
+  describe('recent searches', () => {
+    beforeEach(() => {
+      localStorageMock.getItem.mockReturnValue(null);
+    });
+
+    it('should start with empty recent searches', () => {
+      const { result } = renderHook(() => useSearch(''));
+      expect(result.current.recentSearches).toEqual([]);
+    });
+
+    it('should load recent searches from localStorage', () => {
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(['search1', 'search2']));
+      const { result } = renderHook(() => useSearch(''));
+      expect(result.current.recentSearches).toEqual(['search1', 'search2']);
+    });
+
+    it('should add search to recent searches', async () => {
+      (articleApi.list as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        success: true,
+        data: {
+          items: [mockArticle],
+          total: 1,
+          page: 1,
+          limit: 20,
+          totalPages: 1,
+        },
+      });
+
+      const { result } = renderHook(() => useSearch(''));
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(1);
+      });
+
+      act(() => {
+        result.current.addRecentSearch('new search');
+      });
+
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+    });
+
+    it('should clear recent searches', () => {
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(['search1', 'search2']));
+      const { result } = renderHook(() => useSearch(''));
+
+      act(() => {
+        result.current.clearRecentSearches();
+      });
+
+      expect(result.current.recentSearches).toEqual([]);
+      expect(localStorageMock.removeItem).toHaveBeenCalled();
+    });
+
+    it('should not add empty search to recent searches', () => {
+      const { result } = renderHook(() => useSearch(''));
+
+      act(() => {
+        result.current.addRecentSearch('');
+      });
+
+      expect(localStorageMock.setItem).not.toHaveBeenCalled();
+    });
+
+    it('should deduplicate recent searches', async () => {
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(['existing']));
+      (articleApi.list as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        success: true,
+        data: {
+          items: [mockArticle],
+          total: 1,
+          page: 1,
+          limit: 20,
+          totalPages: 1,
+        },
+      });
+
+      const { result } = renderHook(() => useSearch(''));
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(1);
+      });
+
+      act(() => {
+        result.current.addRecentSearch('existing');
+      });
+
+      // Should not add duplicate
+      expect(result.current.recentSearches).toEqual(['existing']);
     });
   });
 });

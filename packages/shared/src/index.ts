@@ -88,6 +88,7 @@ export interface ArticleListParams extends PaginationParams {
   authorId?: string;
   tag?: string;
   search?: string;
+  createdAfter?: string;
 }
 
 // Comment types

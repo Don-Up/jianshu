@@ -78,10 +78,10 @@ export class ArticlesService {
   }
 
   async findAll(query: QueryArticleDto, userId?: string) {
-    const { page = 1, limit = 20, authorId, tag, search } = query;
+    const { page = 1, limit = 20, authorId, tag, search, createdAfter } = query;
 
     // Try cache first
-    const cacheKey = `articles:list:${JSON.stringify({ page, limit, authorId, tag, search })}:${userId || 'anonymous'}`;
+    const cacheKey = `articles:list:${JSON.stringify({ page, limit, authorId, tag, search, createdAfter })}:${userId || 'anonymous'}`;
     const cached = await this.redis.get(cacheKey);
     if (cached) {
       this.logger.log(`[CACHE HIT] findAll - key: ${cacheKey}`);
@@ -115,6 +115,12 @@ export class ArticlesService {
         { title: { contains: search, mode: 'insensitive' } },
         { content: { contains: search, mode: 'insensitive' } },
       ];
+    }
+
+    if (createdAfter) {
+      where.createdAt = {
+        gte: new Date(createdAfter),
+      };
     }
 
     const [articles, total] = await Promise.all([
