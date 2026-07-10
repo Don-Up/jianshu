@@ -302,4 +302,126 @@ describe('NotificationList', () => {
       expect(screen.getByText(/Another User/)).toBeInTheDocument();
     });
   });
+
+  describe('date grouping', () => {
+    it('should group notifications by date', () => {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const todayNotification: Notification = {
+        ...mockNotification,
+        id: 'today-notif',
+        createdAt: today,
+      };
+
+      const yesterdayNotification: Notification = {
+        ...mockNotification,
+        id: 'yesterday-notif',
+        createdAt: yesterday,
+      };
+
+      (useNotifications as ReturnType<typeof vi.fn>).mockReturnValue({
+        notifications: [todayNotification, yesterdayNotification],
+        total: 2,
+        unreadCount: 2,
+        isLoading: false,
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      });
+
+      render(<NotificationList />);
+
+      expect(screen.getByText('今天')).toBeInTheDocument();
+      expect(screen.getByText('昨天')).toBeInTheDocument();
+    });
+
+    it('should show correct date group headers', () => {
+      const today = new Date();
+
+      (useNotifications as ReturnType<typeof vi.fn>).mockReturnValue({
+        notifications: [{ ...mockNotification, createdAt: today }],
+        total: 1,
+        unreadCount: 1,
+        isLoading: false,
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      });
+
+      render(<NotificationList />);
+
+      expect(screen.getByText('今天')).toBeInTheDocument();
+    });
+  });
+
+  describe('notification types', () => {
+    it('should render FOLLOW type notification', () => {
+      const followNotification: Notification = {
+        ...mockNotification,
+        id: 'follow-notif',
+        type: 'FOLLOW',
+        message: '关注了你',
+      };
+
+      (useNotifications as ReturnType<typeof vi.fn>).mockReturnValue({
+        notifications: [followNotification],
+        total: 1,
+        unreadCount: 1,
+        isLoading: false,
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      });
+
+      render(<NotificationList />);
+
+      expect(screen.getByText('关注了你')).toBeInTheDocument();
+    });
+
+    it('should render article title for notification', () => {
+      (useNotifications as ReturnType<typeof vi.fn>).mockReturnValue({
+        notifications: [mockNotification],
+        total: 1,
+        unreadCount: 1,
+        isLoading: false,
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      });
+
+      render(<NotificationList />);
+
+      expect(screen.getByText(/Test Article/)).toBeInTheDocument();
+    });
+  });
+
+  describe('unread count display', () => {
+    it('should show unread count in header', () => {
+      (useNotifications as ReturnType<typeof vi.fn>).mockReturnValue({
+        notifications: [mockNotification],
+        total: 1,
+        unreadCount: 1,
+        isLoading: false,
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      });
+
+      render(<NotificationList />);
+
+      expect(screen.getByText('1 条未读')).toBeInTheDocument();
+    });
+
+    it('should not show unread count when all read', () => {
+      (useNotifications as ReturnType<typeof vi.fn>).mockReturnValue({
+        notifications: [mockNotification2], // isRead: true
+        total: 1,
+        unreadCount: 0,
+        isLoading: false,
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      });
+
+      render(<NotificationList />);
+
+      expect(screen.queryByText('条未读')).not.toBeInTheDocument();
+    });
+  });
 });
