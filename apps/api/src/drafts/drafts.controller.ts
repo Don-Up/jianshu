@@ -19,7 +19,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 
 @ApiTags('drafts')
-@Controller('articles/drafts')
+@Controller({ path: 'drafts', version: '1' })
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class DraftsController {

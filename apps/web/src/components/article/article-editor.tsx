@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { TiptapEditor } from '@/components/tiptap/tiptap-editor';
-import { articleApi } from '@/lib/api';
+import { articleApi, draftsApi } from '@/lib/api';
 import { useDraft } from '@/hooks/use-draft';
 import { queryKeys } from '@/lib/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
@@ -123,8 +123,11 @@ export function ArticleEditor({ initialData, slug, isEditing }: ArticleEditorPro
       let result;
       if (isEditing && slug) {
         result = await articleApi.update(slug, articleData);
-      } else {
+      } else if (publish) {
         result = await articleApi.create(articleData);
+      } else {
+        // Save as draft - use draftsApi.create
+        result = await draftsApi.create(articleData);
       }
 
       if (result.success && result.data) {

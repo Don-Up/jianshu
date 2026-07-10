@@ -394,3 +394,43 @@ export const feedApi = {
     );
   },
 };
+
+export const draftsApi = {
+  create: (data: CreateArticleRequest) =>
+    fetchApi<ArticleWithAuthor>('/api/v1/drafts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  list: (params?: { page?: number; limit?: number }) => {
+    const searchParams = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : '';
+    return fetchApi<PaginatedResponse<ArticleWithAuthor>>(
+      `/api/v1/drafts${searchParams ? `?${searchParams}` : ''}`
+    );
+  },
+
+  getBySlug: (slug: string) =>
+    fetchApi<ArticleWithAuthor>(`/api/v1/drafts/${slug}`),
+
+  update: (slug: string, data: Partial<CreateArticleRequest>) =>
+    fetchApi<ArticleWithAuthor>(`/api/v1/drafts/${slug}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (slug: string) =>
+    fetchApi<void>(`/api/v1/drafts/${slug}`, {
+      method: 'DELETE',
+    }),
+
+  publish: (slug: string) =>
+    fetchApi<ArticleWithAuthor>(`/api/v1/drafts/${slug}/publish`, {
+      method: 'POST',
+    }),
+};

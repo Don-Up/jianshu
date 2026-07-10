@@ -34,4 +34,7 @@ export const queryKeys = {
   feed: ['feed'] as const,
   homeFeed: () => [...queryKeys.feed, 'home'] as const,
   recommendedFeed: () => [...queryKeys.feed, 'recommended'] as const,
+
+  // Drafts
+  drafts: ['drafts'] as const,
 };
