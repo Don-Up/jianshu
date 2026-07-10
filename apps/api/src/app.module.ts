@@ -17,6 +17,7 @@ import { FollowModule } from './follow/follow.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { HistoryModule } from './history/history.module';
 import { FeedModule } from './feed/feed.module';
+import { DraftsModule } from './drafts/drafts.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { FeedModule } from './feed/feed.module';
     AnalyticsModule,
     HistoryModule,
     FeedModule,
+    DraftsModule,
   ],
   providers: [
     {
