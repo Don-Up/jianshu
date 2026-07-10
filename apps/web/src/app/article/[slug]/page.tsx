@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PageLayout } from '@/components/layout/page-layout';
@@ -13,6 +13,7 @@ import { useArticle } from '@/hooks/use-article';
 import { useAuth } from '@/hooks/use-auth';
 import { CommentsSection } from '@/components/comments/comments-section';
 import { AddToCollectionModal } from '@/components/collections/add-to-collection-modal';
+import { historyApi } from '@/lib/api';
 
 export default function ArticlePage() {
   const params = useParams();
@@ -24,6 +25,15 @@ export default function ArticlePage() {
   const [showCollectionModal, setShowCollectionModal] = useState(false);
 
   const isOwner = !!(user && article && user.id === article.author.id);
+
+  // Record article view for reading history
+  useEffect(() => {
+    if (slug && user) {
+      historyApi.recordView(slug).catch(() => {
+        // Silently fail - viewing an article shouldn't error if history fails
+      });
+    }
+  }, [slug, user]);
 
   const handleLike = async () => {
     setIsLiking(true);

@@ -1,37 +1,38 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { PageLayout } from '@/components/layout/page-layout';
-import { ArticleList } from '@/components/article/article-list';
-import { ArticleListSkeleton } from '@/components/loading/skeleton';
+import { HistoryList } from '@/components/history/history-list';
+import { useHistory } from '@/hooks/use-history';
 import { Button } from '@/components/ui/button';
-import { articleApi } from '@/lib/api';
-import type { ArticleWithAuthor } from '@/types';
 
-export default function Home() {
+export default function HistoryPage() {
   const [page, setPage] = useState(1);
-  const limit = 10;
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['articles', 'list', page, limit],
-    queryFn: () => articleApi.list({ page, limit }),
-  });
-
-  const articles = data?.data?.items || [];
-  const totalPages = data?.data?.totalPages || 0;
+  const { history, isLoading, total, totalPages, removeItem, clearAll, isRemoving } = useHistory(page);
 
   return (
     <PageLayout>
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-foreground">发现</h1>
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">阅读历史</h1>
+          {history.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearAll}
+              disabled={isRemoving}
+              className="text-muted-foreground"
+            >
+              清空全部
+            </Button>
+          )}
         </div>
-        {isLoading ? (
-          <ArticleListSkeleton count={5} />
-        ) : (
-          <ArticleList articles={articles} />
-        )}
+
+        <HistoryList
+          items={history}
+          isLoading={isLoading}
+          onRemoveItem={removeItem}
+        />
 
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-6">

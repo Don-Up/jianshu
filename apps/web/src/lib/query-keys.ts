@@ -26,4 +26,7 @@ export const queryKeys = {
 
   // Versions
   versions: (slug: string) => ['versions', slug] as const,
+
+  // History
+  history: ['history'] as const,
 };

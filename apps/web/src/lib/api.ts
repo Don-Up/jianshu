@@ -331,3 +331,38 @@ export const collectionsApi = {
 
   getBookmarks: () => fetchApi<CollectionItem[]>('/api/v1/collections/bookmarks'),
 };
+
+export interface HistoryItem {
+  article: ArticleWithAuthor;
+  viewedAt: string;
+}
+
+export const historyApi = {
+  getHistory: (params?: { page?: number; limit?: number }) => {
+    const searchParams = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : '';
+    return fetchApi<PaginatedResponse<HistoryItem>>(
+      `/api/v1/users/me/history${searchParams ? `?${searchParams}` : ''}`
+    );
+  },
+
+  removeFromHistory: (articleId: string) =>
+    fetchApi<void>(`/api/v1/users/me/history/${articleId}`, {
+      method: 'DELETE',
+    }),
+
+  clearHistory: () =>
+    fetchApi<void>('/api/v1/users/me/history', {
+      method: 'DELETE',
+    }),
+
+  recordView: (slug: string) =>
+    fetchApi<void>(`/api/v1/articles/${slug}/view`, {
+      method: 'POST',
+    }),
+};
