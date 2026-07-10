@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ProfileHeader } from '@/components/user/profile-header';
+import { ProfileTabs, type ProfileTab } from '@/components/user/profile-tabs';
 import { FollowList } from '@/components/user/follow-list';
 import { ProfileHeaderSkeleton, ArticleListSkeleton } from '@/components/loading/skeleton';
 import { ArticleList } from '@/components/article/article-list';
@@ -14,7 +15,6 @@ import { useCollections } from '@/hooks/use-collections';
 import { userApi } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
 import type { ArticleWithAuthor } from '@/types';
-import type { User } from '@jianshu/shared';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -71,54 +71,11 @@ export default function UserProfilePage() {
         <div className="flex gap-8">
           <main className="flex-1">
             {/* Tab Navigation */}
-            <div className="flex gap-4 border-b mb-6">
-              <button
-                type="button"
-                onClick={() => setActiveTab('articles')}
-                className={`pb-3 px-1 text-sm font-medium transition-colors ${
-                  activeTab === 'articles'
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                文章
-              </button>
-              {isOwnProfile && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('collections')}
-                  className={`pb-3 px-1 text-sm font-medium transition-colors ${
-                    activeTab === 'collections'
-                      ? 'text-primary border-b-2 border-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  收藏集
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setActiveTab('followers')}
-                className={`pb-3 px-1 text-sm font-medium transition-colors ${
-                  activeTab === 'followers'
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                粉丝
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('following')}
-                className={`pb-3 px-1 text-sm font-medium transition-colors ${
-                  activeTab === 'following'
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                关注
-              </button>
-            </div>
+            <ProfileTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab as (tab: ProfileTab) => void}
+              isOwnProfile={isOwnProfile}
+            />
 
             {/* Tab Content */}
             {activeTab === 'articles' ? (
