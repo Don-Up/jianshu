@@ -29,4 +29,9 @@ export const queryKeys = {
 
   // History
   history: ['history'] as const,
+
+  // Feed
+  feed: ['feed'] as const,
+  homeFeed: () => [...queryKeys.feed, 'home'] as const,
+  recommendedFeed: () => [...queryKeys.feed, 'recommended'] as const,
 };

@@ -366,3 +366,31 @@ export const historyApi = {
       method: 'POST',
     }),
 };
+
+export const feedApi = {
+  getHomeFeed: (params?: { page?: number; limit?: number }) => {
+    const searchParams = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : '';
+    return fetchApi<PaginatedResponse<ArticleWithAuthor>>(
+      `/api/v1/feed${searchParams ? `?${searchParams}` : ''}`
+    );
+  },
+
+  getRecommendedFeed: (params?: { page?: number; limit?: number }) => {
+    const searchParams = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : '';
+    return fetchApi<PaginatedResponse<ArticleWithAuthor>>(
+      `/api/v1/feed/recommended${searchParams ? `?${searchParams}` : ''}`
+    );
+  },
+};
