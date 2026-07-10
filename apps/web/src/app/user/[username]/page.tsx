@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { PageLayout } from '@/components/layout/page-layout';
 import { ProfileHeader } from '@/components/user/profile-header';
 import { FollowList } from '@/components/user/follow-list';
@@ -12,6 +12,7 @@ import { CollectionList } from '@/components/collections/collection-list';
 import { useAuth } from '@/hooks/use-auth';
 import { useCollections } from '@/hooks/use-collections';
 import { userApi } from '@/lib/api';
+import { queryKeys } from '@/lib/query-keys';
 import type { ArticleWithAuthor } from '@/types';
 import type { User } from '@jianshu/shared';
 
@@ -21,39 +22,25 @@ export default function UserProfilePage() {
   const { user: currentUser } = useAuth();
   const { collections, isLoading: isCollectionsLoading } = useCollections();
 
-  const [profile, setProfile] = useState<User | null>(null);
-  const [articles, setArticles] = useState<ArticleWithAuthor[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'articles' | 'collections' | 'followers' | 'following'>('articles');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const [profileRes, articlesRes] = await Promise.all([
-          userApi.getByUsername(username),
-          userApi.getArticles(username, { page: 1, limit: 20 }),
-        ]);
+  const { data: profileRes, isLoading: isProfileLoading } = useQuery({
+    queryKey: queryKeys.user(username),
+    queryFn: () => userApi.getByUsername(username),
+    enabled: !!username,
+  });
 
-        if (profileRes.success && profileRes.data) {
-          setProfile(profileRes.data);
-        } else {
-          setError('User not found');
-        }
+  const { data: articlesRes, isLoading: isArticlesLoading } = useQuery({
+    queryKey: queryKeys.userArticles(username),
+    queryFn: () => userApi.getArticles(username, { page: 1, limit: 20 }),
+    enabled: !!username,
+  });
 
-        if (articlesRes.success && articlesRes.data) {
-          setArticles(articlesRes.data.items);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load profile');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const profile = profileRes?.data;
+  const articles = articlesRes?.data?.items || [];
+  const isLoading = isProfileLoading || isArticlesLoading;
 
-    fetchData();
-  }, [username]);
+  const isOwnProfile = currentUser?.username === profile?.username;
 
   if (isLoading) {
     return (
@@ -66,18 +53,15 @@ export default function UserProfilePage() {
     );
   }
 
-  if (error || !profile) {
+  if (!profile) {
     return (
       <PageLayout>
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">用户不存在</h1>
-          <p className="text-muted-foreground">{error}</p>
         </div>
       </PageLayout>
     );
   }
-
-  const isOwnProfile = currentUser?.username === profile.username;
 
   return (
     <PageLayout>

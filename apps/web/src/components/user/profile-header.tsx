@@ -4,20 +4,37 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserStats } from './user-stats';
 import { useFollow } from '@/hooks/use-follow';
+import { useFollowingStatus } from '@/hooks/use-following-status';
 import type { User } from '@jianshu/shared';
 
 interface ProfileHeaderProps {
   user: User;
   isOwnProfile?: boolean;
-  initialIsFollowing?: boolean;
 }
 
-export function ProfileHeader({ user, isOwnProfile, initialIsFollowing }: ProfileHeaderProps) {
-  const { isFollowing, isPending, toggleFollow } = useFollow(
-    user.id,
-    user.username,
-    initialIsFollowing
-  );
+export function ProfileHeader({ user, isOwnProfile }: ProfileHeaderProps) {
+  const { isFollowing, isLoading } = useFollowingStatus(user.username, !isOwnProfile);
+  const { isFollowing: followState, isPending, toggleFollow } = useFollow(user.id, user.username, isFollowing);
+
+  // Use followState for button display since it updates optimistically
+  const displayFollowing = followState;
+  
+
+  if (isLoading && !isOwnProfile) {
+    return (
+      <div className="bg-background border-b">
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <div className="flex items-start gap-6">
+            <div className="h-20 w-20 rounded-full bg-muted animate-pulse" />
+            <div className="flex-1 space-y-3">
+              <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background border-b">
@@ -45,13 +62,13 @@ export function ProfileHeader({ user, isOwnProfile, initialIsFollowing }: Profil
 
             {!isOwnProfile && (
               <Button
-                variant={isFollowing ? 'secondary' : 'default'}
+                variant={displayFollowing ? 'secondary' : 'default'}
                 size="sm"
-                onClick={toggleFollow}
+                onClick={() => toggleFollow()}
                 disabled={isPending}
                 className="mt-4"
               >
-                {isPending ? '处理中...' : isFollowing ? '已关注' : '关注'}
+                {isPending ? '处理中...' : displayFollowing ? '已关注' : '关注'}
               </Button>
             )}
 

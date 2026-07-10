@@ -20,8 +20,8 @@ export class UsersController {
   @Get(':username')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Get user profile by username' })
-  async getByUsername(@Param('username') username: string) {
-    return this.usersService.findByUsername(username);
+  async getByUsername(@Param('username') username: string, @CurrentUser() user?: JwtUser) {
+    return this.usersService.findByUsername(username, user?.id);
   }
 
   @Patch('me')
@@ -62,6 +62,17 @@ export class UsersController {
   ) {
     const user = await this.usersService.findByUsername(username);
     return this.usersService.getFollowers(user.data.id, page || 1, limit || 20);
+  }
+
+  @Get(':username/following-status')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Check if current user is following this user' })
+  async getFollowingStatus(
+    @CurrentUser() user: JwtUser,
+    @Param('username') username: string,
+  ) {
+    return this.usersService.getFollowingStatus(username, user.id);
   }
 
   @Get(':username/following')

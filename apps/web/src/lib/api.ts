@@ -206,6 +206,9 @@ export const userApi = {
     );
   },
 
+  getFollowingStatus: (username: string) =>
+    fetchApi<{ isFollowing: boolean }>(`/api/v1/users/${username}/following-status`),
+
   getFollowing: (username: string, params?: { page?: number; limit?: number }) => {
     const searchParams = params
       ? new URLSearchParams(

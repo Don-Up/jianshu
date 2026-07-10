@@ -10,6 +10,7 @@ export interface User {
   followerCount?: number;
   followingCount?: number;
   articleCount?: number;
+  isFollowing?: boolean;
   createdAt: Date;
 }
 

@@ -11,7 +11,7 @@ export class UsersService {
     private notificationsService: NotificationsService,
   ) {}
 
-  async findByUsername(username: string) {
+  async findByUsername(username: string, requestUserId?: string) {
     const user = await this.prisma.user.findUnique({
       where: { username },
       include: {
@@ -29,6 +29,20 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    // Check if requestUser is following this user
+    let isFollowing = false;
+    if (requestUserId) {
+      const follow = await this.prisma.follow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: requestUserId,
+            followingId: user.id,
+          },
+        },
+      });
+      isFollowing = !!follow;
+    }
+
     const { password, ...result } = user;
     return {
       success: true,
@@ -37,6 +51,7 @@ export class UsersService {
         articleCount: user._count.articles,
         followerCount: user._count.followers,
         followingCount: user._count.following,
+        isFollowing,
       },
     };
   }
@@ -146,6 +161,30 @@ export class UsersService {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+    };
+  }
+
+  async getFollowingStatus(targetUsername: string, requestUserId: string) {
+    const targetUser = await this.prisma.user.findUnique({
+      where: { username: targetUsername },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const follow = await this.prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: requestUserId,
+          followingId: targetUser.id,
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: { isFollowing: !!follow },
     };
   }
 
