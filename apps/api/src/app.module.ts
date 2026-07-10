@@ -18,6 +18,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { HistoryModule } from './history/history.module';
 import { FeedModule } from './feed/feed.module';
 import { DraftsModule } from './drafts/drafts.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { DraftsModule } from './drafts/drafts.module';
     HistoryModule,
     FeedModule,
     DraftsModule,
+    SettingsModule,
   ],
   providers: [
     {
