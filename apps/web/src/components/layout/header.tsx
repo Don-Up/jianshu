@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -10,8 +11,18 @@ import { SearchInput } from '@/components/search/search-input';
 
 export function Header() {
   const router = useRouter();
+  const [tab, setTab] = useState('');
   const { user, isAuthenticated, logout } = useAuth();
   const { unreadCount } = useNotifications();
+
+  useEffect(() => {
+    // Get current tab from URL on mount
+    const params = new URLSearchParams(window.location.search);
+    setTab(params.get('tab') || '');
+  }, []);
+
+  const isDiscover = !tab || tab === 'discover';
+  const isFollowing = tab === 'following';
 
   const handleLogout = async () => {
     await logout();
@@ -27,10 +38,24 @@ export function Header() {
             <span className="text-xl font-bold text-primary">简书</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link
+              href="/?tab=discover"
+              className={`text-sm px-2 py-1 rounded-md ${
+                isDiscover
+                  ? 'bg-muted text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
               发现
             </Link>
-            <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link
+              href="/?tab=following"
+              className={`text-sm px-2 py-1 rounded-md ${
+                isFollowing
+                  ? 'bg-muted text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
               关注
             </Link>
           </nav>
@@ -85,6 +110,18 @@ export function Header() {
                       className="block px-4 py-2 text-sm text-foreground hover:bg-muted"
                     >
                       我的主页
+                    </Link>
+                    <Link
+                      href="/history"
+                      className="block px-4 py-2 text-sm text-foreground hover:bg-muted"
+                    >
+                      阅读历史
+                    </Link>
+                    <Link
+                      href="/editor/drafts"
+                      className="block px-4 py-2 text-sm text-foreground hover:bg-muted"
+                    >
+                      我的草稿
                     </Link>
                     <Link
                       href="/settings"

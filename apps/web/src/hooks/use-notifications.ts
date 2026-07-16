@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationApi } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
+import { useAuth } from './use-auth';
 import type { Notification } from '@jianshu/shared';
 
 interface UseNotificationsResult {
@@ -15,11 +16,13 @@ interface UseNotificationsResult {
 }
 
 export function useNotifications(): UseNotificationsResult {
+  const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: queryKeys.notifications,
     queryFn: () => notificationApi.list(),
+    enabled: isAuthenticated, // Only fetch when logged in
   });
 
   const markAsReadMutation = useMutation({

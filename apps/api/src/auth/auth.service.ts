@@ -103,6 +103,9 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
+    if (!user) {
+      return null;
+    }
     return this.sanitizeUser(user);
   }
 
